@@ -6,8 +6,13 @@ import pyfiglet
 from argparse import ArgumentParser
 import sys
 import hashlib
+import re
+import quopri
 
 SUPPORTED_FILE_TYPES = ["eml"]
+
+# REGEX
+LINK_REGEX = r'href=\"((?:\S)*)\"'
 
 def get_headers(mail_data : str):
     '''Get & Print Headers from mail data'''
@@ -46,6 +51,26 @@ def get_digests(mail_data : str, filename : str):
         print(val)
         print("_"*70)
 
+def get_links(mail_data : str):
+    '''Get & Print Links from mail data'''
+    print(pyfiglet.figlet_format("Links")) # Print Banner
+
+    # If content of eml file is Encoded -> Decode
+    if "Content-Transfer-Encoding" in mail_data:
+        mail_data = str(quopri.decodestring(mail_data)) # Decode
+
+    # Find the Links    
+    links = re.findall(LINK_REGEX, mail_data)
+
+    # Remove Duplicates
+    links = list(dict.fromkeys(links))
+    # Remove Empty Values
+    links = list(filter(None, links))
+
+    # Print Links
+    for link in links:
+        print("-"+link)
+        
 # Main
 if __name__ == '__main__':
     parser = ArgumentParser()
@@ -67,6 +92,13 @@ if __name__ == '__main__':
         "-d",
         "--digests",
         help="Digests of the eml file", 
+        required=False,
+        action="store_true"
+    )
+    parser.add_argument(
+        "-l",
+        "--links",
+        help="Links from the eml file", 
         required=False,
         action="store_true"
     )
@@ -94,3 +126,8 @@ if __name__ == '__main__':
     if args.digests:
         # Get & Print Digests
         get_digests(data,filename)
+    
+    # Links
+    if args.links:
+        # Get & Print Links
+        get_links(data)
