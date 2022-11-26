@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from email import message_from_string
 from email.parser import HeaderParser
 import pyfiglet
 from argparse import ArgumentParser
@@ -68,8 +67,22 @@ def get_links(mail_data : str):
     links = list(filter(None, links))
 
     # Print Links
-    for link in links:
-        print("-"+link)
+    for index,link in enumerate(links,start=1):
+        print("["+str(index)+"]->"+link)
+    
+    print(pyfiglet.figlet_format("Investigation")) # Print Banner
+    # Print Links with Investigation tools
+    for index,link in enumerate(links,start=1):
+        if "://" in link:
+            link = link.split("://")[-1]
+        print("_"*70)
+        print("["+str(index)+"]")
+        print("[VirusTotal]:")
+        print("https://www.virustotal.com/gui/search/"+link)
+        print("[UrlScan]:")
+        print("https://urlscan.io/search/#"+link)
+        print("_"*70)
+
         
 # Main
 if __name__ == '__main__':
