@@ -152,3 +152,43 @@ https://www.virustotal.com/gui/search/5994471abb01112afcc18159f6cc74b4f511b99806
 _________________________________________________________
 
 ```
+
+## To get Links from eml file
+
+```
+python3 email-analyzer.py -f <eml file> --links
+```
+
+```
+ _     _       _
+| |   (_)_ __ | | _____
+| |   | | '_ \| |/ / __|
+| |___| | | | |   <\__ \
+|_____|_|_| |_|_|\_\___/
+
+
+[1]->https://example.com
+[2]->https://testlinks.com/campaing/123124
+ ___                     _   _             _   _
+|_ _|_ ____   _____  ___| |_(_) __ _  __ _| |_(_) ___  _ __
+ | || '_ \ \ / / _ \/ __| __| |/ _` |/ _` | __| |/ _ \| '_ \
+ | || | | \ V /  __/\__ \ |_| | (_| | (_| | |_| | (_) | | | |
+|___|_| |_|\_/ \___||___/\__|_|\__, |\__,_|\__|_|\___/|_| |_|
+                               |___/
+
+_________________________________________________________
+[1]
+[VirusTotal]:
+https://www.virustotal.com/gui/search/example.com
+[UrlScan]:
+https://urlscan.io/search/#example.com
+_________________________________________________________
+
+_________________________________________________________
+[2]
+[VirusTotal]:
+https://www.virustotal.com/gui/search/testlinks.com/campaing/123124
+[UrlScan]:
+https://urlscan.io/search/#testlinks.com/campaing/123124
+_________________________________________________________
+```
