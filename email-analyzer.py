@@ -3,6 +3,7 @@
 # Libraries
 ##############################################################################
 from email.parser import HeaderParser
+from email import message_from_file,policy
 import pyfiglet
 from argparse import ArgumentParser
 import sys
@@ -95,6 +96,29 @@ def get_links(mail_data : str):
         print("[UrlScan]:")
         print("https://urlscan.io/search/#"+link)
         print("_"*TER_COL_SIZE)
+
+def get_attachments(filename : str):
+    ''' Get & Print Attachments from eml file'''
+    print(pyfiglet.figlet_format("Attachments")) # Print Banner
+    with open(filename, "r") as f:
+        msg = message_from_file(f, policy=policy.default)
+    
+    for index,attachment in enumerate(msg.iter_attachments(),start=1):
+        output_filename = attachment.get_filename()
+        print("["+str(index)+"]"+output_filename)
+    
+    print(pyfiglet.figlet_format("Investigation")) # Print Banner
+    for index,attachment in enumerate(msg.iter_attachments(),start=1):
+        print("_"*TER_COL_SIZE)
+        print("["+str(index)+"]")
+        md5 = hashlib.md5(attachment.get_payload(decode=True)).hexdigest()
+        sha1 = hashlib.sha1(attachment.get_payload(decode=True)).hexdigest()
+        sha256=hashlib.sha256(attachment.get_payload(decode=True)).hexdigest()
+        print("[Virustotal]")
+        print("[md5]->https://www.virustotal.com/gui/search/"+md5)
+        print("[sha1]->https://www.virustotal.com/gui/search/"+sha1)
+        print("[sha256]->https://www.virustotal.com/gui/search/"+sha256)
+        print("_"*TER_COL_SIZE)
 ##############################################################################
         
 # Main
@@ -126,6 +150,13 @@ if __name__ == '__main__':
         "-l",
         "--links",
         help="Links from the eml file", 
+        required=False,
+        action="store_true"
+    )
+    parser.add_argument(
+        "-a",
+        "--attachments",
+        help="Attachments from the eml file", 
         required=False,
         action="store_true"
     )
@@ -163,4 +194,9 @@ if __name__ == '__main__':
     if args.links:
         # Get & Print Links
         get_links(data)
+    
+    # Attachments
+    if args.attachments:
+        # Get & Print Attachments
+        get_attachments(filename)
 ##############################################################################
