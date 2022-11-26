@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# Libraries
+##############################################################################
 from email.parser import HeaderParser
 import pyfiglet
 from argparse import ArgumentParser
@@ -7,12 +9,23 @@ import sys
 import hashlib
 import re
 import quopri
+import os
+##############################################################################
 
+# Global Values
+##############################################################################
+# Supported File Types
 SUPPORTED_FILE_TYPES = ["eml"]
 
 # REGEX
 LINK_REGEX = r'href=\"((?:\S)*)\"'
 
+# Terminal Column Size
+TER_COL_SIZE = 60
+##############################################################################
+
+# Functions
+##############################################################################
 def get_headers(mail_data : str):
     '''Get & Print Headers from mail data'''
     print(pyfiglet.figlet_format("Headers")) # Print Banner
@@ -20,10 +33,10 @@ def get_headers(mail_data : str):
     headers = HeaderParser().parsestr(mail_data, headersonly=True)
     # Print Headers
     for key,val in headers.items():
-        print("_"*70)
+        print("_"*TER_COL_SIZE)
         print(key+":")
         print(val)
-        print("_"*70)
+        print("_"*TER_COL_SIZE)
 
 def get_digests(mail_data : str, filename : str):
     '''Get & Print Hash value of mail'''
@@ -45,10 +58,10 @@ def get_digests(mail_data : str, filename : str):
     print(pyfiglet.figlet_format("Digests")) # Print Banner
     # Print digests
     for key,val in digests.items():
-        print("_"*70)
+        print("_"*TER_COL_SIZE)
         print(key+":")
         print(val)
-        print("_"*70)
+        print("_"*TER_COL_SIZE)
 
 def get_links(mail_data : str):
     '''Get & Print Links from mail data'''
@@ -75,16 +88,17 @@ def get_links(mail_data : str):
     for index,link in enumerate(links,start=1):
         if "://" in link:
             link = link.split("://")[-1]
-        print("_"*70)
+        print("_"*TER_COL_SIZE)
         print("["+str(index)+"]")
         print("[VirusTotal]:")
         print("https://www.virustotal.com/gui/search/"+link)
         print("[UrlScan]:")
         print("https://urlscan.io/search/#"+link)
-        print("_"*70)
-
+        print("_"*TER_COL_SIZE)
+##############################################################################
         
 # Main
+##############################################################################
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument(
@@ -117,6 +131,11 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
+    # Get Terminal Column Size
+    terminal_size = os.get_terminal_size()
+    # Set Terminal Column Size
+    TER_COL_SIZE = terminal_size.columns
+
     # Filename
     if args.filename:
         # Get Filename
@@ -144,3 +163,4 @@ if __name__ == '__main__':
     if args.links:
         # Get & Print Links
         get_links(data)
+##############################################################################
