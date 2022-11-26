@@ -192,3 +192,42 @@ https://www.virustotal.com/gui/search/testlinks.com/campaing/123124
 https://urlscan.io/search/#testlinks.com/campaing/123124
 _________________________________________________________
 ```
+
+## To get Attachments from eml file
+
+```
+python3 email-analyzer.py -f <eml file> --attachments
+```
+
+```
+    _   _   _             _                          _
+   / \ | |_| |_ __ _  ___| |__  _ __ ___   ___ _ __ | |_ ___
+  / _ \| __| __/ _` |/ __| '_ \| '_ ` _ \ / _ \ '_ \| __/ __|
+ / ___ \ |_| || (_| | (__| | | | | | | | |  __/ | | | |_\__ \
+/_/   \_\__|\__\__,_|\___|_| |_|_| |_| |_|\___|_| |_|\__|___/
+
+
+[1]example.pdf
+[2]malicious.pdf
+ ___                     _   _             _   _
+|_ _|_ ____   _____  ___| |_(_) __ _  __ _| |_(_) ___  _ __
+ | || '_ \ \ / / _ \/ __| __| |/ _` |/ _` | __| |/ _ \| '_ \
+ | || | | \ V /  __/\__ \ |_| | (_| | (_| | |_| | (_) | | | |
+|___|_| |_|\_/ \___||___/\__|_|\__, |\__,_|\__|_|\___/|_| |_|
+                               |___/
+
+_________________________________________________________
+[1]
+[Virustotal]
+[md5]->https://www.virustotal.com/gui/search/81dc9bdb52d04dc20036dbd8313ed055
+[sha1]->https://www.virustotal.com/gui/search/7110eda4d09e062aa5e4a390b0a572ac0d2c0220
+[sha256]->https://www.virustotal.com/gui/search/03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4
+_________________________________________________________
+_________________________________________________________
+[2]
+[Virustotal]
+[md5]->https://www.virustotal.com/gui/search/827ccb0eea8a706c4c34a16891f84e7b
+[sha1]->https://www.virustotal.com/gui/search/8cb2237d0679ca88db6464eac60da96345513964
+[sha256]->https://www.virustotal.com/gui/search/5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5
+_________________________________________________________
+```
