@@ -38,6 +38,18 @@ def get_headers(mail_data : str):
         print(key+":")
         print(val)
         print("_"*TER_COL_SIZE)
+    
+    print(pyfiglet.figlet_format("Investigation")) # Print Banner
+    for key,val in headers.items():
+        if key == "X-Sender-IP":
+            print("_"*TER_COL_SIZE)
+            print("["+key+"]")
+            print("[Virustotal]")
+            print("https://www.virustotal.com/gui/search/"+val)
+            print("[Abuseipdb]")
+            print("https://www.abuseipdb.com/check/"+val)
+            print("_"*TER_COL_SIZE)
+
 
 def get_digests(mail_data : str, filename : str):
     '''Get & Print Hash value of mail'''
@@ -69,7 +81,7 @@ def get_digests(mail_data : str, filename : str):
         print("_"*TER_COL_SIZE)
         print("["+key+"]")
         print("[Virustotal]")
-        print("["+key+"]->https://www.virustotal.com/gui/search/"+val)
+        print("https://www.virustotal.com/gui/search/"+val)
         print("_"*TER_COL_SIZE)
 
 def get_links(mail_data : str):
