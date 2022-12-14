@@ -4,13 +4,13 @@
 ##############################################################################
 from email.parser import HeaderParser
 from email import message_from_file,policy
-import pyfiglet
 from argparse import ArgumentParser
 import sys
 import hashlib
 import re
 import quopri
 import os
+from banners import *
 ##############################################################################
 
 # Global Values
@@ -29,7 +29,7 @@ TER_COL_SIZE = 60
 ##############################################################################
 def get_headers(mail_data : str):
     '''Get & Print Headers from mail data'''
-    print(pyfiglet.figlet_format("Headers")) # Print Banner
+    get_headers_banner() # Print Banner
     # Get Headers from mail data
     headers = HeaderParser().parsestr(mail_data, headersonly=True)
     # Print Headers
@@ -39,7 +39,7 @@ def get_headers(mail_data : str):
         print(val)
         print("_"*TER_COL_SIZE)
     
-    print(pyfiglet.figlet_format("Investigation")) # Print Banner
+    get_investigation_banner() # Print Banner
     for key,val in headers.items():
         if key == "X-Sender-IP":
             print("_"*TER_COL_SIZE)
@@ -68,7 +68,7 @@ def get_digests(mail_data : str, filename : str):
         "Content SHA256":hashlib.sha256(mail_data.encode("utf-8")).hexdigest()
     }
 
-    print(pyfiglet.figlet_format("Digests")) # Print Banner
+    get_digests_banner() # Print Banner
     # Print digests
     for key,val in digests.items():
         print("_"*TER_COL_SIZE)
@@ -76,7 +76,7 @@ def get_digests(mail_data : str, filename : str):
         print(val)
         print("_"*TER_COL_SIZE)
     
-    print(pyfiglet.figlet_format("Investigation")) # Print Banner
+    get_investigation_banner() # Print Banner
     for key,val in digests.items():
         print("_"*TER_COL_SIZE)
         print("["+key+"]")
@@ -86,7 +86,7 @@ def get_digests(mail_data : str, filename : str):
 
 def get_links(mail_data : str):
     '''Get & Print Links from mail data'''
-    print(pyfiglet.figlet_format("Links")) # Print Banner
+    get_links_banner() # Print Banner
 
     # If content of eml file is Encoded -> Decode
     if "Content-Transfer-Encoding" in mail_data:
@@ -104,7 +104,7 @@ def get_links(mail_data : str):
     for index,link in enumerate(links,start=1):
         print("["+str(index)+"]->"+link)
     
-    print(pyfiglet.figlet_format("Investigation")) # Print Banner
+    get_investigation_banner() # Print Banner
     # Print Links with Investigation tools
     for index,link in enumerate(links,start=1):
         if "://" in link:
@@ -119,7 +119,7 @@ def get_links(mail_data : str):
 
 def get_attachments(filename : str):
     ''' Get & Print Attachments from eml file'''
-    print(pyfiglet.figlet_format("Attachments")) # Print Banner
+    get_attachment_banner() # Print Banner
     with open(filename, "r") as f:
         msg = message_from_file(f, policy=policy.default)
     
@@ -127,7 +127,7 @@ def get_attachments(filename : str):
         output_filename = attachment.get_filename()
         print("["+str(index)+"]"+output_filename)
     
-    print(pyfiglet.figlet_format("Investigation")) # Print Banner
+    get_investigation_banner() # Print Banner
     for index,attachment in enumerate(msg.iter_attachments(),start=1):
         print("_"*TER_COL_SIZE)
         print("["+str(index)+"]")
@@ -143,8 +143,11 @@ def get_attachments(filename : str):
         
 # Main
 ##############################################################################
+description = str(get_introduction_banner())+"_"*TER_COL_SIZE
 if __name__ == '__main__':
-    parser = ArgumentParser()
+    parser = ArgumentParser(
+        description=description
+    )
     parser.add_argument(
         "-f",
         "--filename", 
