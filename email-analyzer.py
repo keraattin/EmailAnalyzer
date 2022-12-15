@@ -41,7 +41,7 @@ def get_digests(mail_data : str, filename : str):
         file_md5    = hashlib.md5(file).hexdigest()
         file_sha1   = hashlib.sha1(file).hexdigest()
         file_sha256 = hashlib.sha256(file).hexdigest()
-    
+
     digests = {
         "File MD5":file_md5,
         "File SHA1":file_sha1,
@@ -50,22 +50,7 @@ def get_digests(mail_data : str, filename : str):
         "Content SHA1":hashlib.sha1(mail_data.encode("utf-8")).hexdigest(),
         "Content SHA256":hashlib.sha256(mail_data.encode("utf-8")).hexdigest()
     }
-
-    get_digests_banner() # Print Banner
-    # Print digests
-    for key,val in digests.items():
-        print("_"*TER_COL_SIZE)
-        print(key+":")
-        print(val)
-        print("_"*TER_COL_SIZE)
-    
-    get_investigation_banner() # Print Banner
-    for key,val in digests.items():
-        print("_"*TER_COL_SIZE)
-        print("["+key+"]")
-        print("[Virustotal]")
-        print("https://www.virustotal.com/gui/search/"+val)
-        print("_"*TER_COL_SIZE)
+    return digests
 
 def get_links(mail_data : str):
     '''Get & Print Links from mail data'''
@@ -190,7 +175,6 @@ if __name__ == '__main__':
     if args.headers:
         # Get Headers
         headers = get_headers(data)
-        print(type(headers))
         # Print Headers
         get_headers_banner() # Print Banner
         for key,val in headers.items():
@@ -213,7 +197,22 @@ if __name__ == '__main__':
     # Digests
     if args.digests:
         # Get & Print Digests
-        get_digests(data,filename)
+        digests = get_digests(data,filename)
+        # Print digests
+        get_digests_banner() # Print Banner
+        for key,val in digests.items():
+            print("_"*TER_COL_SIZE)
+            print(key+":")
+            print(val)
+            print("_"*TER_COL_SIZE)
+        
+        get_investigation_banner() # Print Banner
+        for key,val in digests.items():
+            print("_"*TER_COL_SIZE)
+            print("["+key+"]")
+            print("[Virustotal]")
+            print("https://www.virustotal.com/gui/search/"+val)
+            print("_"*TER_COL_SIZE)
     
     # Links
     if args.links:
