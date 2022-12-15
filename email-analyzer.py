@@ -28,27 +28,10 @@ TER_COL_SIZE = 60
 # Functions
 ##############################################################################
 def get_headers(mail_data : str):
-    '''Get & Print Headers from mail data'''
-    get_headers_banner() # Print Banner
+    '''Get Headers from mail data'''
     # Get Headers from mail data
     headers = HeaderParser().parsestr(mail_data, headersonly=True)
-    # Print Headers
-    for key,val in headers.items():
-        print("_"*TER_COL_SIZE)
-        print(key+":")
-        print(val)
-        print("_"*TER_COL_SIZE)
-    
-    get_investigation_banner() # Print Banner
-    for key,val in headers.items():
-        if key == "X-Sender-IP":
-            print("_"*TER_COL_SIZE)
-            print("["+key+"]")
-            print("[Virustotal]")
-            print("https://www.virustotal.com/gui/search/"+val)
-            print("[Abuseipdb]")
-            print("https://www.abuseipdb.com/check/"+val)
-            print("_"*TER_COL_SIZE)
+    return headers
 
 
 def get_digests(mail_data : str, filename : str):
@@ -205,8 +188,27 @@ if __name__ == '__main__':
 
     # Headers
     if args.headers:
-        # Get & Print Headers
-        get_headers(data)
+        # Get Headers
+        headers = get_headers(data)
+        print(type(headers))
+        # Print Headers
+        get_headers_banner() # Print Banner
+        for key,val in headers.items():
+            print("_"*TER_COL_SIZE)
+            print(key+":")
+            print(val)
+            print("_"*TER_COL_SIZE)
+        
+        get_investigation_banner() # Print Banner
+        for key,val in headers.items():
+            if key == "X-Sender-IP":
+                print("_"*TER_COL_SIZE)
+                print("["+key+"]")
+                print("[Virustotal]")
+                print("https://www.virustotal.com/gui/search/"+val)
+                print("[Abuseipdb]")
+                print("https://www.abuseipdb.com/check/"+val)
+                print("_"*TER_COL_SIZE)
     
     # Digests
     if args.digests:
