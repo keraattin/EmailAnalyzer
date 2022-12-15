@@ -68,22 +68,7 @@ def get_links(mail_data : str):
     # Remove Empty Values
     links = list(filter(None, links))
 
-    # Print Links
-    for index,link in enumerate(links,start=1):
-        print("["+str(index)+"]->"+link)
-    
-    get_investigation_banner() # Print Banner
-    # Print Links with Investigation tools
-    for index,link in enumerate(links,start=1):
-        if "://" in link:
-            link = link.split("://")[-1]
-        print("_"*TER_COL_SIZE)
-        print("["+str(index)+"]")
-        print("[VirusTotal]:")
-        print("https://www.virustotal.com/gui/search/"+link)
-        print("[UrlScan]:")
-        print("https://urlscan.io/search/#"+link)
-        print("_"*TER_COL_SIZE)
+    return links
 
 def get_attachments(filename : str):
     ''' Get & Print Attachments from eml file'''
@@ -217,7 +202,23 @@ if __name__ == '__main__':
     # Links
     if args.links:
         # Get & Print Links
-        get_links(data)
+        links = get_links(data)
+        # Print Links
+        for index,link in enumerate(links,start=1):
+            print("["+str(index)+"]->"+link)
+        
+        get_investigation_banner() # Print Banner
+        # Print Links with Investigation tools
+        for index,link in enumerate(links,start=1):
+            if "://" in link:
+                link = link.split("://")[-1]
+            print("_"*TER_COL_SIZE)
+            print("["+str(index)+"]")
+            print("[VirusTotal]:")
+            print("https://www.virustotal.com/gui/search/"+link)
+            print("[UrlScan]:")
+            print("https://urlscan.io/search/#"+link)
+            print("_"*TER_COL_SIZE)
     
     # Attachments
     if args.attachments:
