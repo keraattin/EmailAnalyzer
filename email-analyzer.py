@@ -28,27 +28,10 @@ TER_COL_SIZE = 60
 # Functions
 ##############################################################################
 def get_headers(mail_data : str):
-    '''Get & Print Headers from mail data'''
-    get_headers_banner() # Print Banner
+    '''Get Headers from mail data'''
     # Get Headers from mail data
     headers = HeaderParser().parsestr(mail_data, headersonly=True)
-    # Print Headers
-    for key,val in headers.items():
-        print("_"*TER_COL_SIZE)
-        print(key+":")
-        print(val)
-        print("_"*TER_COL_SIZE)
-    
-    get_investigation_banner() # Print Banner
-    for key,val in headers.items():
-        if key == "X-Sender-IP":
-            print("_"*TER_COL_SIZE)
-            print("["+key+"]")
-            print("[Virustotal]")
-            print("https://www.virustotal.com/gui/search/"+val)
-            print("[Abuseipdb]")
-            print("https://www.abuseipdb.com/check/"+val)
-            print("_"*TER_COL_SIZE)
+    return headers
 
 
 def get_digests(mail_data : str, filename : str):
@@ -58,7 +41,7 @@ def get_digests(mail_data : str, filename : str):
         file_md5    = hashlib.md5(file).hexdigest()
         file_sha1   = hashlib.sha1(file).hexdigest()
         file_sha256 = hashlib.sha256(file).hexdigest()
-    
+
     digests = {
         "File MD5":file_md5,
         "File SHA1":file_sha1,
@@ -67,22 +50,7 @@ def get_digests(mail_data : str, filename : str):
         "Content SHA1":hashlib.sha1(mail_data.encode("utf-8")).hexdigest(),
         "Content SHA256":hashlib.sha256(mail_data.encode("utf-8")).hexdigest()
     }
-
-    get_digests_banner() # Print Banner
-    # Print digests
-    for key,val in digests.items():
-        print("_"*TER_COL_SIZE)
-        print(key+":")
-        print(val)
-        print("_"*TER_COL_SIZE)
-    
-    get_investigation_banner() # Print Banner
-    for key,val in digests.items():
-        print("_"*TER_COL_SIZE)
-        print("["+key+"]")
-        print("[Virustotal]")
-        print("https://www.virustotal.com/gui/search/"+val)
-        print("_"*TER_COL_SIZE)
+    return digests
 
 def get_links(mail_data : str):
     '''Get & Print Links from mail data'''
@@ -100,45 +68,23 @@ def get_links(mail_data : str):
     # Remove Empty Values
     links = list(filter(None, links))
 
-    # Print Links
-    for index,link in enumerate(links,start=1):
-        print("["+str(index)+"]->"+link)
-    
-    get_investigation_banner() # Print Banner
-    # Print Links with Investigation tools
-    for index,link in enumerate(links,start=1):
-        if "://" in link:
-            link = link.split("://")[-1]
-        print("_"*TER_COL_SIZE)
-        print("["+str(index)+"]")
-        print("[VirusTotal]:")
-        print("https://www.virustotal.com/gui/search/"+link)
-        print("[UrlScan]:")
-        print("https://urlscan.io/search/#"+link)
-        print("_"*TER_COL_SIZE)
+    return links
 
 def get_attachments(filename : str):
     ''' Get & Print Attachments from eml file'''
-    get_attachment_banner() # Print Banner
     with open(filename, "r") as f:
         msg = message_from_file(f, policy=policy.default)
     
-    for index,attachment in enumerate(msg.iter_attachments(),start=1):
-        output_filename = attachment.get_filename()
-        print("["+str(index)+"]"+output_filename)
+    attachments = []
+    for attachment in msg.iter_attachments():
+        attached_file = {}
+        attached_file["filename"] = attachment.get_filename()
+        attached_file["md5"] = hashlib.md5(attachment.get_payload(decode=True)).hexdigest()
+        attached_file["sha1"] = hashlib.sha1(attachment.get_payload(decode=True)).hexdigest()
+        attached_file["sha256"]=hashlib.sha256(attachment.get_payload(decode=True)).hexdigest()
+        attachments.append(attached_file)
     
-    get_investigation_banner() # Print Banner
-    for index,attachment in enumerate(msg.iter_attachments(),start=1):
-        print("_"*TER_COL_SIZE)
-        print("["+str(index)+"]")
-        md5 = hashlib.md5(attachment.get_payload(decode=True)).hexdigest()
-        sha1 = hashlib.sha1(attachment.get_payload(decode=True)).hexdigest()
-        sha256=hashlib.sha256(attachment.get_payload(decode=True)).hexdigest()
-        print("[Virustotal]")
-        print("[md5]->https://www.virustotal.com/gui/search/"+md5)
-        print("[sha1]->https://www.virustotal.com/gui/search/"+sha1)
-        print("[sha256]->https://www.virustotal.com/gui/search/"+sha256)
-        print("_"*TER_COL_SIZE)
+    return attachments
 ##############################################################################
         
 # Main
@@ -207,21 +153,87 @@ if __name__ == '__main__':
 
     # Headers
     if args.headers:
-        # Get & Print Headers
-        get_headers(data)
+        # Get Headers
+        headers = get_headers(data)
+        # Print Headers
+        get_headers_banner() # Print Banner
+        for key,val in headers.items():
+            print("_"*TER_COL_SIZE)
+            print(key+":")
+            print(val)
+            print("_"*TER_COL_SIZE)
+        
+        get_investigation_banner() # Print Banner
+        for key,val in headers.items():
+            if key == "X-Sender-IP":
+                print("_"*TER_COL_SIZE)
+                print("["+key+"]")
+                print("[Virustotal]")
+                print("https://www.virustotal.com/gui/search/"+val)
+                print("[Abuseipdb]")
+                print("https://www.abuseipdb.com/check/"+val)
+                print("_"*TER_COL_SIZE)
     
     # Digests
     if args.digests:
         # Get & Print Digests
-        get_digests(data,filename)
+        digests = get_digests(data,filename)
+        # Print digests
+        get_digests_banner() # Print Banner
+        for key,val in digests.items():
+            print("_"*TER_COL_SIZE)
+            print(key+":")
+            print(val)
+            print("_"*TER_COL_SIZE)
+        
+        get_investigation_banner() # Print Banner
+        for key,val in digests.items():
+            print("_"*TER_COL_SIZE)
+            print("["+key+"]")
+            print("[Virustotal]")
+            print("https://www.virustotal.com/gui/search/"+val)
+            print("_"*TER_COL_SIZE)
     
     # Links
     if args.links:
         # Get & Print Links
-        get_links(data)
+        links = get_links(data)
+        # Print Links
+        for index,link in enumerate(links,start=1):
+            print("["+str(index)+"]->"+link)
+        
+        get_investigation_banner() # Print Banner
+        # Print Links with Investigation tools
+        for index,link in enumerate(links,start=1):
+            if "://" in link:
+                link = link.split("://")[-1]
+            print("_"*TER_COL_SIZE)
+            print("["+str(index)+"]")
+            print("[VirusTotal]:")
+            print("https://www.virustotal.com/gui/search/"+link)
+            print("[UrlScan]:")
+            print("https://urlscan.io/search/#"+link)
+            print("_"*TER_COL_SIZE)
     
     # Attachments
     if args.attachments:
-        # Get & Print Attachments
-        get_attachments(filename)
+        # Get Attachments 
+        attachments = get_attachments(filename)
+
+        # Print Attachments
+        get_attachment_banner() # Print Banner
+        print("_"*TER_COL_SIZE)
+        for index,attachment in enumerate(attachments,start=1):
+            print("["+str(index)+"]->"+attachment["filename"])
+        print("_"*TER_COL_SIZE)
+        
+        get_investigation_banner() # Print Banner
+        for index,attachment in enumerate(attachments,start=1):
+            print("_"*TER_COL_SIZE)
+            print("["+str(index)+"]->"+attachment["filename"])
+            print("[Virustotal]")
+            print("[md5]->https://www.virustotal.com/gui/search/"+attachment["md5"])
+            print("[sha1]->https://www.virustotal.com/gui/search/"+attachment["sha1"])
+            print("[sha256]->https://www.virustotal.com/gui/search/"+attachment["sha256"])
+            print("_"*TER_COL_SIZE)
 ##############################################################################
