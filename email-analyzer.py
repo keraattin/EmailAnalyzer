@@ -72,26 +72,19 @@ def get_links(mail_data : str):
 
 def get_attachments(filename : str):
     ''' Get & Print Attachments from eml file'''
-    get_attachment_banner() # Print Banner
     with open(filename, "r") as f:
         msg = message_from_file(f, policy=policy.default)
     
-    for index,attachment in enumerate(msg.iter_attachments(),start=1):
-        output_filename = attachment.get_filename()
-        print("["+str(index)+"]"+output_filename)
+    attachments = []
+    for attachment in msg.iter_attachments():
+        attached_file = {}
+        attached_file["filename"] = attachment.get_filename()
+        attached_file["md5"] = hashlib.md5(attachment.get_payload(decode=True)).hexdigest()
+        attached_file["sha1"] = hashlib.sha1(attachment.get_payload(decode=True)).hexdigest()
+        attached_file["sha256"]=hashlib.sha256(attachment.get_payload(decode=True)).hexdigest()
+        attachments.append(attached_file)
     
-    get_investigation_banner() # Print Banner
-    for index,attachment in enumerate(msg.iter_attachments(),start=1):
-        print("_"*TER_COL_SIZE)
-        print("["+str(index)+"]")
-        md5 = hashlib.md5(attachment.get_payload(decode=True)).hexdigest()
-        sha1 = hashlib.sha1(attachment.get_payload(decode=True)).hexdigest()
-        sha256=hashlib.sha256(attachment.get_payload(decode=True)).hexdigest()
-        print("[Virustotal]")
-        print("[md5]->https://www.virustotal.com/gui/search/"+md5)
-        print("[sha1]->https://www.virustotal.com/gui/search/"+sha1)
-        print("[sha256]->https://www.virustotal.com/gui/search/"+sha256)
-        print("_"*TER_COL_SIZE)
+    return attachments
 ##############################################################################
         
 # Main
@@ -222,6 +215,23 @@ if __name__ == '__main__':
     
     # Attachments
     if args.attachments:
-        # Get & Print Attachments
-        get_attachments(filename)
+        # Get Attachments 
+        attachments = get_attachments(filename)
+
+        # Print Attachments
+        get_attachment_banner() # Print Banner
+        print("_"*TER_COL_SIZE)
+        for index,attachment in enumerate(attachments,start=1):
+            print("["+str(index)+"]->"+attachment["filename"])
+        print("_"*TER_COL_SIZE)
+        
+        get_investigation_banner() # Print Banner
+        for index,attachment in enumerate(attachments,start=1):
+            print("_"*TER_COL_SIZE)
+            print("["+str(index)+"]->"+attachment["filename"])
+            print("[Virustotal]")
+            print("[md5]->https://www.virustotal.com/gui/search/"+attachment["md5"])
+            print("[sha1]->https://www.virustotal.com/gui/search/"+attachment["sha1"])
+            print("[sha256]->https://www.virustotal.com/gui/search/"+attachment["sha256"])
+            print("_"*TER_COL_SIZE)
 ##############################################################################
