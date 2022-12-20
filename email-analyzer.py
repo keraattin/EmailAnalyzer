@@ -164,8 +164,8 @@ if __name__ == '__main__':
         headers = get_headers(data)
         # Print Headers
         get_headers_banner() # Print Banner
+        print("_"*TER_COL_SIZE)
         for key,val in headers.items():
-            print("_"*TER_COL_SIZE)
             print(key+":")
             print(val)
             print("_"*TER_COL_SIZE)
@@ -173,15 +173,15 @@ if __name__ == '__main__':
         # If Investigation requested
         if args.investigate:
             get_investigation_banner() # Print Banner
-            for key,val in headers.items():
-                if key == "X-Sender-IP":
-                    print("_"*TER_COL_SIZE)
-                    print("["+key+"]")
-                    print("[Virustotal]")
-                    print("https://www.virustotal.com/gui/search/"+val)
-                    print("[Abuseipdb]")
-                    print("https://www.abuseipdb.com/check/"+val)
-                    print("_"*TER_COL_SIZE)
+            if headers["X-Sender-IP"]:
+                print("_"*TER_COL_SIZE)
+                print("[X-Sender-IP] -> ["+headers["X-Sender-IP"]+"]")
+                print("[Virustotal]")
+                print("https://www.virustotal.com/gui/search/"+headers["X-Sender-IP"])
+                print("[Abuseipdb]")
+                print("https://www.abuseipdb.com/check/"+headers["X-Sender-IP"])
+                print("_"*TER_COL_SIZE)
+                    
     
     # Digests
     if args.digests:
@@ -189,8 +189,8 @@ if __name__ == '__main__':
         digests = get_digests(data,filename)
         # Print digests
         get_digests_banner() # Print Banner
+        print("_"*TER_COL_SIZE)
         for key,val in digests.items():
-            print("_"*TER_COL_SIZE)
             print(key+":")
             print(val)
             print("_"*TER_COL_SIZE)
@@ -198,8 +198,8 @@ if __name__ == '__main__':
         # If Investigation requested
         if args.investigate:
             get_investigation_banner() # Print Banner
+            print("_"*TER_COL_SIZE)
             for key,val in digests.items():
-                print("_"*TER_COL_SIZE)
                 print("["+key+"]")
                 print("[Virustotal]")
                 print("https://www.virustotal.com/gui/search/"+val)
@@ -217,10 +217,10 @@ if __name__ == '__main__':
         if args.investigate:
             get_investigation_banner() # Print Banner
             # Print Links with Investigation tools
+            print("_"*TER_COL_SIZE)
             for index,link in enumerate(links,start=1):
                 if "://" in link:
                     link = link.split("://")[-1]
-                print("_"*TER_COL_SIZE)
                 print("["+str(index)+"]")
                 print("[VirusTotal]:")
                 print("https://www.virustotal.com/gui/search/"+link)
@@ -243,8 +243,8 @@ if __name__ == '__main__':
         # If Investigation requested
         if args.investigate:
             get_investigation_banner() # Print Banner
+            print("_"*TER_COL_SIZE)
             for index,attachment in enumerate(attachments,start=1):
-                print("_"*TER_COL_SIZE)
                 print("["+str(index)+"]->"+attachment["filename"])
                 print("[Virustotal]")
                 print("[md5]->https://www.virustotal.com/gui/search/"+attachment["md5"])
