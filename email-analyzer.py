@@ -138,10 +138,12 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    # Get Terminal Column Size
-    terminal_size = os.get_terminal_size()
-    # Set Terminal Column Size
-    TER_COL_SIZE = terminal_size.columns
+    # If we are in a terminal
+    if sys.stdout.isatty():
+        # Get Terminal Column Size
+        terminal_size = os.get_terminal_size()
+        # Set Terminal Column Size
+        TER_COL_SIZE = terminal_size.columns
 
     # Filename
     if args.filename:
