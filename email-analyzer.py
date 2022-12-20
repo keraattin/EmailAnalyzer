@@ -96,36 +96,43 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         "-f",
-        "--filename", 
-        type=str, 
-        help="Name of file", 
+        "--filename",
+        type=str,
+        help="Name of file",
         required=True
     )
     parser.add_argument(
         "-H",
         "--headers",
-        help="Headers of the eml file", 
+        help="Headers of the eml file",
         required=False,
         action="store_true"
     )
     parser.add_argument(
         "-d",
         "--digests",
-        help="Digests of the eml file", 
+        help="Digests of the eml file",
         required=False,
         action="store_true"
     )
     parser.add_argument(
         "-l",
         "--links",
-        help="Links from the eml file", 
+        help="Links from the eml file",
         required=False,
         action="store_true"
     )
     parser.add_argument(
         "-a",
         "--attachments",
-        help="Attachments from the eml file", 
+        help="Attachments from the eml file",
+        required=False,
+        action="store_true"
+    )
+    parser.add_argument(
+        "-i",
+        "--investigate",
+        help="Activate if you want an investigation",
         required=False,
         action="store_true"
     )
@@ -163,16 +170,18 @@ if __name__ == '__main__':
             print(val)
             print("_"*TER_COL_SIZE)
         
-        get_investigation_banner() # Print Banner
-        for key,val in headers.items():
-            if key == "X-Sender-IP":
-                print("_"*TER_COL_SIZE)
-                print("["+key+"]")
-                print("[Virustotal]")
-                print("https://www.virustotal.com/gui/search/"+val)
-                print("[Abuseipdb]")
-                print("https://www.abuseipdb.com/check/"+val)
-                print("_"*TER_COL_SIZE)
+        # If Investigation requested
+        if args.investigate:
+            get_investigation_banner() # Print Banner
+            for key,val in headers.items():
+                if key == "X-Sender-IP":
+                    print("_"*TER_COL_SIZE)
+                    print("["+key+"]")
+                    print("[Virustotal]")
+                    print("https://www.virustotal.com/gui/search/"+val)
+                    print("[Abuseipdb]")
+                    print("https://www.abuseipdb.com/check/"+val)
+                    print("_"*TER_COL_SIZE)
     
     # Digests
     if args.digests:
@@ -186,13 +195,15 @@ if __name__ == '__main__':
             print(val)
             print("_"*TER_COL_SIZE)
         
-        get_investigation_banner() # Print Banner
-        for key,val in digests.items():
-            print("_"*TER_COL_SIZE)
-            print("["+key+"]")
-            print("[Virustotal]")
-            print("https://www.virustotal.com/gui/search/"+val)
-            print("_"*TER_COL_SIZE)
+        # If Investigation requested
+        if args.investigate:
+            get_investigation_banner() # Print Banner
+            for key,val in digests.items():
+                print("_"*TER_COL_SIZE)
+                print("["+key+"]")
+                print("[Virustotal]")
+                print("https://www.virustotal.com/gui/search/"+val)
+                print("_"*TER_COL_SIZE)
     
     # Links
     if args.links:
@@ -202,18 +213,20 @@ if __name__ == '__main__':
         for index,link in enumerate(links,start=1):
             print("["+str(index)+"]->"+link)
         
-        get_investigation_banner() # Print Banner
-        # Print Links with Investigation tools
-        for index,link in enumerate(links,start=1):
-            if "://" in link:
-                link = link.split("://")[-1]
-            print("_"*TER_COL_SIZE)
-            print("["+str(index)+"]")
-            print("[VirusTotal]:")
-            print("https://www.virustotal.com/gui/search/"+link)
-            print("[UrlScan]:")
-            print("https://urlscan.io/search/#"+link)
-            print("_"*TER_COL_SIZE)
+        # If Investigation requested
+        if args.investigate:
+            get_investigation_banner() # Print Banner
+            # Print Links with Investigation tools
+            for index,link in enumerate(links,start=1):
+                if "://" in link:
+                    link = link.split("://")[-1]
+                print("_"*TER_COL_SIZE)
+                print("["+str(index)+"]")
+                print("[VirusTotal]:")
+                print("https://www.virustotal.com/gui/search/"+link)
+                print("[UrlScan]:")
+                print("https://urlscan.io/search/#"+link)
+                print("_"*TER_COL_SIZE)
     
     # Attachments
     if args.attachments:
@@ -227,13 +240,15 @@ if __name__ == '__main__':
             print("["+str(index)+"]->"+attachment["filename"])
         print("_"*TER_COL_SIZE)
         
-        get_investigation_banner() # Print Banner
-        for index,attachment in enumerate(attachments,start=1):
-            print("_"*TER_COL_SIZE)
-            print("["+str(index)+"]->"+attachment["filename"])
-            print("[Virustotal]")
-            print("[md5]->https://www.virustotal.com/gui/search/"+attachment["md5"])
-            print("[sha1]->https://www.virustotal.com/gui/search/"+attachment["sha1"])
-            print("[sha256]->https://www.virustotal.com/gui/search/"+attachment["sha256"])
-            print("_"*TER_COL_SIZE)
+        # If Investigation requested
+        if args.investigate:
+            get_investigation_banner() # Print Banner
+            for index,attachment in enumerate(attachments,start=1):
+                print("_"*TER_COL_SIZE)
+                print("["+str(index)+"]->"+attachment["filename"])
+                print("[Virustotal]")
+                print("[md5]->https://www.virustotal.com/gui/search/"+attachment["md5"])
+                print("[sha1]->https://www.virustotal.com/gui/search/"+attachment["sha1"])
+                print("[sha256]->https://www.virustotal.com/gui/search/"+attachment["sha256"])
+                print("_"*TER_COL_SIZE)
 ##############################################################################
