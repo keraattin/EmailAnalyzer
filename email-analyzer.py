@@ -161,6 +161,7 @@ def get_attachments(filename : str, investigation):
         for index,attachment in enumerate(attachments,start=1):
             data["Attachments"]["Investigation"][attachment["filename"]] ={
                 "Virustotal":{
+                    "Name Search":"https://www.virustotal.com/gui/search/{}".format(attachment["filename"]),
                     "MD5":"https://www.virustotal.com/gui/search/{}".format(attachment["MD5"]),
                     "SHA1":"https://www.virustotal.com/gui/search/{}".format(attachment["SHA1"]),
                     "SHA256":"https://www.virustotal.com/gui/search/{}".format(attachment["SHA256"])
