@@ -21,6 +21,7 @@ SUPPORTED_FILE_TYPES = ["eml"]
 
 # REGEX
 LINK_REGEX = r'href=\"((?:\S)*)\"'
+MAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
 
 # Terminal Column Size
 TER_COL_SIZE = 60
@@ -51,6 +52,30 @@ def get_headers(mail_data : str, investigation):
                 )
             }
         
+        # Reply To - From Investigation (Spoof Check)
+        if data["Headers"]["Data"].get("reply-to") and data["Headers"]["Data"].get("from"):
+            # Get Reply-To Address
+            replyto = re.findall(
+                    MAIL_REGEX,data["Headers"]["Data"]["reply-to"]
+            )[0]
+            
+            # Get From Address
+            mailfrom = re.findall(
+                    MAIL_REGEX,data["Headers"]["Data"]["from"]
+            )[0]
+            
+            # Check if From & Reply-To is same
+            if replyto == mailfrom:
+                conclusion = "Reply Address and From Address is SAME."
+            else:
+                conclusion = "Reply Address and From Address is NOT Same. This mail may be SPOOFED."
+            
+            # Write data to JSON
+            data["Headers"]["Investigation"]["Spoof Check"] = {
+                "Reply-To" : replyto,
+                "From": mailfrom,
+                "Conclusion":conclusion
+            }
 
     return data
 
