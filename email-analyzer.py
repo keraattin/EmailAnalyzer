@@ -11,6 +11,8 @@ import re
 import quopri
 import os
 import json
+from datetime import datetime
+from pprint import pprint
 from banners import *
 ##############################################################################
 
@@ -37,7 +39,7 @@ def get_headers(mail_data : str, investigation):
     data = json.loads('{"Headers":{"Data":{},"Investigation":{}}}')
     # Put Header data to JSON
     for k,v in headers.items():
-        data["Headers"]["Data"][k.lower()] = v
+        data["Headers"]["Data"][k.lower()] = v.replace('\t', '').replace('\n', '')
     
     # If investigation requested
     if investigation:
@@ -207,7 +209,7 @@ if __name__ == '__main__':
         "-f",
         "--filename",
         type=str,
-        help="Name of file",
+        help="Name of EML file",
         required=True
     )
     parser.add_argument(
@@ -245,6 +247,13 @@ if __name__ == '__main__':
         required=False,
         action="store_true"
     )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        help="Name of the Output file",
+        required=False
+    )
     args = parser.parse_args()
 
     # If we are in a terminal
@@ -267,6 +276,20 @@ if __name__ == '__main__':
     with open(filename,"r",encoding="utf-8") as file:
         data = file.read().rstrip()
 
+    # If printing to file requested
+    if args.output:
+        # Create JSON data
+        app_data = json.loads('{"Information": {}, "Analysis":{}}')
+        app_data["Information"] = {
+            "Project":"EmailAnalyzer",
+            "Url":"https://github.com/keraattin/EmailAnalyzer",
+            "Version": "1.0",
+            "Generated": str(datetime.now())
+        }
+        # Write to the file
+        with open(args.output, 'w', encoding="utf-8") as file:
+            json.dump(app_data, file, indent=4)
+
     # Headers
     if args.headers:
         # Get Headers
@@ -288,7 +311,15 @@ if __name__ == '__main__':
                 for k,v in val.items():
                     print("{}:\n{}\n".format(k,v))
                 print("_"*TER_COL_SIZE)
-            
+        
+        # If printing to file requested
+        if args.output:
+            with open(args.output, 'r+', encoding="utf-8") as file:
+                json_data = json.load(file)
+                json_data["Analysis"].update(headers)
+                file.seek(0)
+                json.dump(json_data, file, indent=4)
+
     # Digests
     if args.digests:
         # Get & Print Digests
@@ -311,6 +342,14 @@ if __name__ == '__main__':
                     print("{}:\n{}\n".format(k,v))
                 print("_"*TER_COL_SIZE)
     
+        # If printing to file requested
+        if args.output:
+            with open(args.output, 'r+', encoding="utf-8") as file:
+                json_data = json.load(file)
+                json_data["Analysis"].update(digests)
+                file.seek(0)
+                json.dump(json_data, file, indent=4)
+
     # Links
     if args.links:
         # Get & Print Links
@@ -329,6 +368,14 @@ if __name__ == '__main__':
                 for k,v in val.items():
                     print("{}:\n{}\n".format(k,v))
                 print("_"*TER_COL_SIZE)
+        
+        # If printing to file requested
+        if args.output:
+            with open(args.output, 'r+', encoding="utf-8") as file:
+                json_data = json.load(file)
+                json_data["Analysis"].update(links)
+                file.seek(0)
+                json.dump(json_data, file, indent=4)
     
     # Attachments
     if args.attachments:
@@ -353,4 +400,12 @@ if __name__ == '__main__':
                     for a,b in v.items():
                         print("[{}]->{}".format(a,b))
                 print("_"*TER_COL_SIZE)
+        
+        # If printing to file requested
+        if args.output:
+            with open(args.output, 'r+', encoding="utf-8") as file:
+                json_data = json.load(file)
+                json_data["Analysis"].update(attachments)
+                file.seek(0)
+                json.dump(json_data, file, indent=4)
 ##############################################################################
