@@ -12,7 +12,6 @@ import quopri
 import os
 import json
 from datetime import datetime
-from pprint import pprint
 from banners import *
 ##############################################################################
 
@@ -46,12 +45,8 @@ def get_headers(mail_data : str, investigation):
         # X-Sender-Ip Investigation
         if data["Headers"]["Data"].get("x-sender-ip"):
             data["Headers"]["Investigation"]["X-Sender-Ip"] = {
-                "Virustotal":"https://www.virustotal.com/gui/search/{}".format(
-                    data["Headers"]["Data"]["x-sender-ip"]
-                ),
-                "Abuseipdb":"https://www.abuseipdb.com/check/{}".format(
-                    data["Headers"]["Data"]["x-sender-ip"]
-                )
+                "Virustotal":f'https://www.virustotal.com/gui/search/{data["Headers"]["Data"]["x-sender-ip"]}',
+                "Abuseipdb":f'https://www.abuseipdb.com/check/{data["Headers"]["Data"]["x-sender-ip"]}'
             }
         
         # Reply To - From Investigation (Spoof Check)
@@ -108,22 +103,22 @@ def get_digests(mail_data : str, filename : str, investigation):
     # If investigation requested
     if investigation:
         data["Digests"]["Investigation"]["File MD5"] = {
-            "Virustotal":"https://www.virustotal.com/gui/search/{}".format(file_md5)
+            "Virustotal":f"https://www.virustotal.com/gui/search/{file_md5}"
         }
         data["Digests"]["Investigation"]["File SHA1"] = {
-            "Virustotal":"https://www.virustotal.com/gui/search/{}".format(file_sha1)
+            "Virustotal":f"https://www.virustotal.com/gui/search/{file_sha1}"
         }
         data["Digests"]["Investigation"]["File SHA256"] = {
-            "Virustotal":"https://www.virustotal.com/gui/search/{}".format(file_sha256)
+            "Virustotal":f"https://www.virustotal.com/gui/search/{file_sha256}"
         }
         data["Digests"]["Investigation"]["Content MD5"] = {
-            "Virustotal":"https://www.virustotal.com/gui/search/{}".format(content_md5)
+            "Virustotal":f"https://www.virustotal.com/gui/search/{content_md5}"
         }
         data["Digests"]["Investigation"]["Content SHA1"] = {
-            "Virustotal":"https://www.virustotal.com/gui/search/{}".format(content_sha1)
+            "Virustotal":f"https://www.virustotal.com/gui/search/{content_sha1}"
         }
         data["Digests"]["Investigation"]["Content SHA256"] = {
-            "Virustotal":"https://www.virustotal.com/gui/search/{}".format(content_sha256)
+            "Virustotal":f"https://www.virustotal.com/gui/search/{content_sha256}"
         }
     return data
 
@@ -157,8 +152,8 @@ def get_links(mail_data : str, investigation):
                 link = link.split("://")[-1]
             
             data["Links"]["Investigation"][str(index)] = {
-                "Virustotal":"https://www.virustotal.com/gui/search/{}".format(link),
-                "Urlscan":"https://urlscan.io/search/#{}".format(link)
+                "Virustotal":f"https://www.virustotal.com/gui/search/{link}",
+                "Urlscan":f"https://urlscan.io/search/#{link}"
             }
     return data
 
@@ -188,10 +183,10 @@ def get_attachments(filename : str, investigation):
         for index,attachment in enumerate(attachments,start=1):
             data["Attachments"]["Investigation"][attachment["filename"]] ={
                 "Virustotal":{
-                    "Name Search":"https://www.virustotal.com/gui/search/{}".format(attachment["filename"]),
-                    "MD5":"https://www.virustotal.com/gui/search/{}".format(attachment["MD5"]),
-                    "SHA1":"https://www.virustotal.com/gui/search/{}".format(attachment["SHA1"]),
-                    "SHA256":"https://www.virustotal.com/gui/search/{}".format(attachment["SHA256"])
+                    "Name Search":f'https://www.virustotal.com/gui/search/{attachment["filename"]}',
+                    "MD5":f'https://www.virustotal.com/gui/search/{attachment["MD5"]}',
+                    "SHA1":f'https://www.virustotal.com/gui/search/{attachment["SHA1"]}',
+                    "SHA256":f'https://www.virustotal.com/gui/search/{attachment["SHA256"]}'
                 }
             }
 
@@ -270,7 +265,7 @@ if __name__ == '__main__':
         # Get File Format
         file_format = filename.split('.')[-1]
         if not file_format in SUPPORTED_FILE_TYPES:
-            print("{} file format not supported".format(file_format))
+            print(f"{file_format} file format not supported")
             sys.exit(-1) #Exit with error code
     
     with open(filename,"r",encoding="utf-8") as file:
@@ -299,7 +294,7 @@ if __name__ == '__main__':
         
         for key,val in headers["Headers"]["Data"].items():
             print("_"*TER_COL_SIZE)
-            print("[{}]".format(key))
+            print(f"[{key}]")
             print(val)
             print("_"*TER_COL_SIZE)
         # If Investigation requested
@@ -307,9 +302,9 @@ if __name__ == '__main__':
             get_investigation_banner() # Print Banner
             for key,val in headers["Headers"]["Investigation"].items():
                 print("_"*TER_COL_SIZE)
-                print("[{}]".format(key))
+                print(f"[{key}]")
                 for k,v in val.items():
-                    print("{}:\n{}\n".format(k,v))
+                    print(f"{k}:\n{v}\n")
                 print("_"*TER_COL_SIZE)
         
         # If printing to file requested
@@ -328,7 +323,7 @@ if __name__ == '__main__':
         get_digests_banner() # Print Banner
         for key,val in digests["Digests"]["Data"].items():
             print("_"*TER_COL_SIZE)
-            print("[{}]".format(key))
+            print(f"[{key}]")
             print(val)
             print("_"*TER_COL_SIZE)
         
@@ -337,9 +332,9 @@ if __name__ == '__main__':
             get_investigation_banner() # Print Banner
             for key,val in digests["Digests"]["Investigation"].items():
                 print("_"*TER_COL_SIZE)
-                print("[{}]".format(key))
+                print(f"[{key}]")
                 for k,v in val.items():
-                    print("{}:\n{}\n".format(k,v))
+                    print(f"{k}:\n{v}\n")
                 print("_"*TER_COL_SIZE)
     
         # If printing to file requested
@@ -356,7 +351,7 @@ if __name__ == '__main__':
         links = get_links(data, args.investigate)
         # Print Links
         for key,val in links["Links"]["Data"].items():
-            print("[{}]->{}".format(key,val))
+            print(f"[{key}]->{val}")
         
         # If Investigation requested
         if args.investigate:
@@ -364,9 +359,9 @@ if __name__ == '__main__':
             # Print Links with Investigation tools
             for key,val in links["Links"]["Investigation"].items():
                 print("_"*TER_COL_SIZE)
-                print("[{}]".format(key))
+                print(f"[{key}]")
                 for k,v in val.items():
-                    print("{}:\n{}\n".format(k,v))
+                    print(f"{k}:\n{v}\n")
                 print("_"*TER_COL_SIZE)
         
         # If printing to file requested
@@ -386,7 +381,7 @@ if __name__ == '__main__':
         get_attachment_banner() # Print Banner
         print("_"*TER_COL_SIZE)
         for key,val in attachments["Attachments"]["Data"].items():
-            print("[{}]->{}".format(key,val))
+            print(f"[{key}]->{val}")
         print("_"*TER_COL_SIZE)
         
         # If Investigation requested
@@ -394,11 +389,11 @@ if __name__ == '__main__':
             get_investigation_banner() # Print Banner
             for key,val in attachments["Attachments"]["Investigation"].items():
                 print("_"*TER_COL_SIZE)
-                print("- {}\n".format(key))
+                print(f"- {key}\n")
                 for k,v in val.items():
-                    print("{}:".format(k))
+                    print(f"{k}:")
                     for a,b in v.items():
-                        print("[{}]->{}".format(a,b))
+                        print(f"[{a}]->{b}")
                 print("_"*TER_COL_SIZE)
         
         # If printing to file requested
