@@ -76,7 +76,6 @@ def get_headers(mail_data : str, investigation):
 
     return data
 
-
 def get_digests(mail_data : str, filename : str, investigation):
     '''Get Hash value of mail'''
     with open(filename, 'rb') as f:
@@ -124,7 +123,6 @@ def get_digests(mail_data : str, filename : str, investigation):
 
 def get_links(mail_data : str, investigation):
     '''Get Links from mail data'''
-    get_links_banner() # Print Banner
 
     # If content of eml file is Encoded -> Decode
     if "Content-Transfer-Encoding" in mail_data:
@@ -192,10 +190,106 @@ def get_attachments(filename : str, investigation):
 
     return data
 ##############################################################################
+
+# Pretty Print Function
+##############################################################################
+def print_data(data):
+    # Print Headers
+    if data["Analysis"].get("Headers"):
+        # Print Banner
+        get_headers_banner()
+
+        # Print Headers
+        for key,val in data["Analysis"]["Headers"]["Data"].items():
+            print("_"*TER_COL_SIZE)
+            print(f"[{key}]")
+            print(val)
+            print("_"*TER_COL_SIZE)
         
+        # Print Investigation
+        if data["Analysis"]["Headers"].get("Investigation"):
+            get_investigation_banner() # Print Banner
+            for key,val in data["Analysis"]["Headers"]["Investigation"].items():
+                print("_"*TER_COL_SIZE)
+                print(f"[{key}]")
+                for k,v in val.items():
+                    print(f"{k}:\n{v}\n")
+                print("_"*TER_COL_SIZE)
+    
+    # Print Digests
+    if data["Analysis"].get("Digests"):
+        # Print Banner
+        get_digests_banner()
+
+        for key,val in data["Analysis"]["Digests"]["Data"].items():
+            print("_"*TER_COL_SIZE)
+            print(f"[{key}]")
+            print(val)
+            print("_"*TER_COL_SIZE)
+        
+        # Print Investigation
+        if data["Analysis"]["Digests"].get("Investigation"):
+            get_investigation_banner() # Print Banner
+            for key,val in data["Analysis"]["Digests"]["Investigation"].items():
+                print("_"*TER_COL_SIZE)
+                print(f"[{key}]")
+                for k,v in val.items():
+                    print(f"{k}:\n{v}\n")
+                print("_"*TER_COL_SIZE)
+
+    # Print Links
+    if data["Analysis"].get("Links"):
+        # Print Banner
+        get_links_banner()
+
+        # Print Links
+        for key,val in data["Analysis"]["Links"]["Data"].items():
+            print(f"[{key}]->{val}")
+        
+        # Print Investigation
+        if data["Analysis"]["Links"].get("Investigation"):
+            get_investigation_banner() # Print Banner
+            # Print Links with Investigation tools
+            for key,val in data["Analysis"]["Links"]["Investigation"].items():
+                print("_"*TER_COL_SIZE)
+                print(f"[{key}]")
+                for k,v in val.items():
+                    print(f"{k}:\n{v}\n")
+                print("_"*TER_COL_SIZE)
+    
+    # Print Attachments
+    if data["Analysis"].get("Attachments"):
+        # Print Banner
+        get_links_banner()
+
+        # Print Attachments
+        for key,val in data["Analysis"]["Attachments"]["Data"].items():
+            print(f"[{key}]->{val}")
+            print("_"*TER_COL_SIZE)
+        
+        # Print Investigation
+        if data["Analysis"]["Attachments"].get("Investigation"):
+            get_investigation_banner() # Print Banner
+            for key,val in data["Analysis"]["Attachments"]["Investigation"].items():
+                print("_"*TER_COL_SIZE)
+                print(f"- {key}\n")
+                for k,v in val.items():
+                    print(f"{k}:")
+                    for a,b in v.items():
+                        print(f"[{a}]->{b}")
+                print("_"*TER_COL_SIZE)
+##############################################################################
+
+# Write to File Function
+##############################################################################
+def write_to_file(filename, data):
+    with open(filename, 'w', encoding="utf-8") as file:
+        json.dump(data, file, indent=4)
+##############################################################################
+
 # Main
 ##############################################################################
-description = str(get_introduction_banner())+"_"*TER_COL_SIZE
+description = str(get_introduction_banner())
 if __name__ == '__main__':
     parser = ArgumentParser(
         description=description
@@ -271,136 +365,75 @@ if __name__ == '__main__':
     with open(filename,"r",encoding="utf-8") as file:
         data = file.read().rstrip()
 
-    # If printing to file requested
-    if args.output:
-        # Create JSON data
-        app_data = json.loads('{"Information": {}, "Analysis":{}}')
-        app_data["Information"] = {
-            "Project":"EmailAnalyzer",
-            "Url":"https://github.com/keraattin/EmailAnalyzer",
-            "Version": "1.0",
-            "Generated": str(datetime.now())
-        }
-        # Write to the file
-        with open(args.output, 'w', encoding="utf-8") as file:
-            json.dump(app_data, file, indent=4)
+    # Create JSON data
+    app_data = json.loads('{"Information": {}, "Analysis":{}}')
+    app_data["Information"] = {
+        "Project":"EmailAnalyzer",
+        "Url":"https://github.com/keraattin/EmailAnalyzer",
+        "Version": "1.0",
+        "Generated": str(datetime.now())
+    }
+    
+    # List of Arguments
+    arg_list = [args.headers, args.digests, args.links, args.attachments]
 
-    # Headers
-    if args.headers:
+    # Check if any argument given
+    if any(arg_list):
+        # Headers
+        if args.headers:
+            # Get Headers
+            headers = get_headers(data, args.investigate)
+            app_data["Analysis"].update(headers)
+
+        # Digests
+        if args.digests:
+            # Get Digests
+            digests = get_digests(data, filename, args.investigate)
+            app_data["Analysis"].update(digests)
+
+        # Links
+        if args.links:
+            # Get & Print Links
+            links = get_links(data, args.investigate)
+            app_data["Analysis"].update(links)
+        
+        # Attachments
+        if args.attachments:
+            # Get Attachments 
+            attachments = get_attachments(filename, args.investigate)
+            app_data["Analysis"].update(attachments)
+        
+        # Print data to Terminal
+        print_data(app_data)
+
+        # If printing to file requested
+        if args.output:
+            write_to_file(args.output, app_data)
+            
+    else:
+        # If no argument given then run all processes
+        investigate = True
         # Get Headers
-        headers = get_headers(data, args.investigate)
-        # Print Headers
-        get_headers_banner() # Print Banner
-        
-        for key,val in headers["Headers"]["Data"].items():
-            print("_"*TER_COL_SIZE)
-            print(f"[{key}]")
-            print(val)
-            print("_"*TER_COL_SIZE)
-        # If Investigation requested
-        if args.investigate:
-            get_investigation_banner() # Print Banner
-            for key,val in headers["Headers"]["Investigation"].items():
-                print("_"*TER_COL_SIZE)
-                print(f"[{key}]")
-                for k,v in val.items():
-                    print(f"{k}:\n{v}\n")
-                print("_"*TER_COL_SIZE)
-        
-        # If printing to file requested
-        if args.output:
-            with open(args.output, 'r+', encoding="utf-8") as file:
-                json_data = json.load(file)
-                json_data["Analysis"].update(headers)
-                file.seek(0)
-                json.dump(json_data, file, indent=4)
+        headers = get_headers(data, investigate)
+        app_data["Analysis"].update(headers)
 
-    # Digests
-    if args.digests:
-        # Get & Print Digests
-        digests = get_digests(data, filename, args.investigate)
-        # Print digests
-        get_digests_banner() # Print Banner
-        for key,val in digests["Digests"]["Data"].items():
-            print("_"*TER_COL_SIZE)
-            print(f"[{key}]")
-            print(val)
-            print("_"*TER_COL_SIZE)
-        
-        # If Investigation requested
-        if args.investigate:
-            get_investigation_banner() # Print Banner
-            for key,val in digests["Digests"]["Investigation"].items():
-                print("_"*TER_COL_SIZE)
-                print(f"[{key}]")
-                for k,v in val.items():
-                    print(f"{k}:\n{v}\n")
-                print("_"*TER_COL_SIZE)
-    
-        # If printing to file requested
-        if args.output:
-            with open(args.output, 'r+', encoding="utf-8") as file:
-                json_data = json.load(file)
-                json_data["Analysis"].update(digests)
-                file.seek(0)
-                json.dump(json_data, file, indent=4)
+        # Get Digests
+        digests = get_digests(data, filename, investigate)
+        app_data["Analysis"].update(digests)
 
-    # Links
-    if args.links:
+
         # Get & Print Links
-        links = get_links(data, args.investigate)
-        # Print Links
-        for key,val in links["Links"]["Data"].items():
-            print(f"[{key}]->{val}")
+        links = get_links(data, investigate)
+        app_data["Analysis"].update(links)
         
-        # If Investigation requested
-        if args.investigate:
-            get_investigation_banner() # Print Banner
-            # Print Links with Investigation tools
-            for key,val in links["Links"]["Investigation"].items():
-                print("_"*TER_COL_SIZE)
-                print(f"[{key}]")
-                for k,v in val.items():
-                    print(f"{k}:\n{v}\n")
-                print("_"*TER_COL_SIZE)
-        
-        # If printing to file requested
-        if args.output:
-            with open(args.output, 'r+', encoding="utf-8") as file:
-                json_data = json.load(file)
-                json_data["Analysis"].update(links)
-                file.seek(0)
-                json.dump(json_data, file, indent=4)
-    
-    # Attachments
-    if args.attachments:
         # Get Attachments 
-        attachments = get_attachments(filename, args.investigate)
+        attachments = get_attachments(filename, investigate)
+        app_data["Analysis"].update(attachments)
 
-        # Print Attachments
-        get_attachment_banner() # Print Banner
-        print("_"*TER_COL_SIZE)
-        for key,val in attachments["Attachments"]["Data"].items():
-            print(f"[{key}]->{val}")
-        print("_"*TER_COL_SIZE)
-        
-        # If Investigation requested
-        if args.investigate:
-            get_investigation_banner() # Print Banner
-            for key,val in attachments["Attachments"]["Investigation"].items():
-                print("_"*TER_COL_SIZE)
-                print(f"- {key}\n")
-                for k,v in val.items():
-                    print(f"{k}:")
-                    for a,b in v.items():
-                        print(f"[{a}]->{b}")
-                print("_"*TER_COL_SIZE)
-        
+        # Print data to Terminal
+        print_data(app_data)
+
         # If printing to file requested
         if args.output:
-            with open(args.output, 'r+', encoding="utf-8") as file:
-                json_data = json.load(file)
-                json_data["Analysis"].update(attachments)
-                file.seek(0)
-                json.dump(json_data, file, indent=4)
+            write_to_file(args.output, app_data)
 ##############################################################################
