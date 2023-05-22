@@ -13,12 +13,16 @@ import os
 import json
 from datetime import datetime
 from banners import *
+from html_generator import generate_table_from_json
 ##############################################################################
 
 # Global Values
 ##############################################################################
 # Supported File Types
 SUPPORTED_FILE_TYPES = ["eml"]
+
+# Supported Output File Types
+SUPPORTED_OUTPUT_TYPES = ["json","html","txt"]
 
 # REGEX
 LINK_REGEX = r'href=\"((?:\S)*)\"'
@@ -194,6 +198,9 @@ def get_attachments(filename : str, investigation):
 # Pretty Print Function
 ##############################################################################
 def print_data(data):
+    # Inroduction Banner
+    get_introduction_banner()
+
     # Print Headers
     if data["Analysis"].get("Headers"):
         # Print Banner
@@ -260,7 +267,7 @@ def print_data(data):
     # Print Attachments
     if data["Analysis"].get("Attachments"):
         # Print Banner
-        get_links_banner()
+        get_attachment_banner()
 
         # Print Attachments
         for key,val in data["Analysis"]["Attachments"]["Data"].items():
@@ -283,13 +290,27 @@ def print_data(data):
 # Write to File Function
 ##############################################################################
 def write_to_file(filename, data):
-    with open(filename, 'w', encoding="utf-8") as file:
-        json.dump(data, file, indent=4)
+    # Get File Format
+    file_format = filename.split('.')[-1]
+    file_format = file_format.lower()
+    
+    if file_format == "json":
+        with open(filename, 'w', encoding="utf-8") as file:
+            json.dump(data, file, indent=4)
+    elif file_format == "html":
+        with open(filename, 'w', encoding="utf-8") as file:
+            html_data = generate_table_from_json(data)
+            file.write(html_data)
+    # if Output File Format is NOT Supported
+    # file_format is NOT in SUPPORTED_FILE_TYPES
+    else:
+        print(f"{filename} file format not supported for output")
+        sys.exit(-1) #Exit with error code
 ##############################################################################
 
 # Main
 ##############################################################################
-description = str(get_introduction_banner())
+description = ""
 if __name__ == '__main__':
     parser = ArgumentParser(
         description=description
@@ -433,7 +454,8 @@ if __name__ == '__main__':
         # Print data to Terminal
         print_data(app_data)
 
-        # If printing to file requested
+        # If write to file requested
         if args.output:
-            write_to_file(args.output, app_data)
+            output_filename = str(args.output) # Filename
+            write_to_file(output_filename, app_data)
 ##############################################################################
