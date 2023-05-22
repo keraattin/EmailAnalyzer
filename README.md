@@ -3,29 +3,50 @@ With EmailAnalyzer you can able to analyze your suspicious emails. You can extra
 
 ## Usage
 ```
-usage: email-analyzer.py [-h] -f FILENAME [-H] [-d] [-l] [-a]
+usage: email-analyzer.py [-h] -f FILENAME [-H] [-d] [-l] [-a] [-i] [-o OUTPUT]
 
 options:
   -h, --help            show this help message and exit
   -f FILENAME, --filename FILENAME
-                        Name of file
+                        Name of EML file
   -H, --headers         Headers of the eml file
   -d, --digests         Digests of the eml file
   -l, --links           Links from the eml file
   -a, --attachments     Attachments from the eml file
+  -i, --investigate     Activate if you want an investigation
+  -o OUTPUT, --output OUTPUT
+                        Name of the Output file
 ```
 
-## To get Headers
+## Run
+```
+python3 email-analyzer.py -f <eml file> 
+```
+This command will get you Headers, Links, Attachments, Digests with Investigations.
+
+If you want to extract the outputs to a file you can use this command:
+```
+python3 email-analyzer.py -f <eml file> -o report.html
+```
+or 
+```
+python3 email-analyzer.py -f <eml file> -o report.json
+```
+
+Currently only supported **JSON** and **HTML** formats.
+
+## To get ONLY Headers
 ```
 python3 email-analyzer.py -f <eml file> --headers
 ```
 
 ```
- _   _                _
-| | | | ___  __ _  __| | ___ _ __ ___
-| |_| |/ _ \/ _` |/ _` |/ _ \ '__/ __|
-|  _  |  __/ (_| | (_| |  __/ |  \__ \
-|_| |_|\___|\__,_|\__,_|\___|_|  |___/
+██╗  ██╗███████╗ █████╗ ██████╗ ███████╗██████╗ ███████╗
+██║  ██║██╔════╝██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔════╝
+███████║█████╗  ███████║██║  ██║█████╗  ██████╔╝███████╗
+██╔══██║██╔══╝  ██╔══██║██║  ██║██╔══╝  ██╔══██╗╚════██║
+██║  ██║███████╗██║  ██║██████╔╝███████╗██║  ██║███████║
+╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════╝
 
 _________________________________________________________
 Received:
@@ -53,20 +74,40 @@ _________________________________________________________
 X-Sender-IP:
 127.0.0.1
 _________________________________________________________
+```
 
- ___                     _   _             _   _
-|_ _|_ ____   _____  ___| |_(_) __ _  __ _| |_(_) ___  _ __
- | || '_ \ \ / / _ \/ __| __| |/ _` |/ _` | __| |/ _ \| '_ \
- | || | | \ V /  __/\__ \ |_| | (_| | (_| | |_| | (_) | | | |
-|___|_| |_|\_/ \___||___/\__|_|\__, |\__,_|\__|_|\___/|_| |_|
-                               |___/
+### To Investigate Headers:
+`python3 mail-analyzer.py -f <eml file> --headers --investigate`
+
+`python3 mail-analyzer.py -f <eml file> -Hi`
+
+```
+ █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗██╗███████╗
+██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝██╔════╝██║██╔════╝
+███████║██╔██╗ ██║███████║██║   ╚████╔╝ ███████╗██║███████╗
+██╔══██║██║╚██╗██║██╔══██║██║    ╚██╔╝  ╚════██║██║╚════██║
+██║  ██║██║ ╚████║██║  ██║███████╗██║   ███████║██║███████║
+╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝   ╚══════╝╚═╝╚══════╝
 
 _________________________________________________________
 [X-Sender-IP]
-[Virustotal]
+Virustotal:
 https://www.virustotal.com/gui/search/127.0.0.1
-[Abuseipdb]
+
+Abuseipdb:
 https://www.abuseipdb.com/check/127.0.0.1
+_________________________________________________________
+
+_________________________________________________________
+[Spoof Check]
+Reply-To:
+info123@gmail.com
+
+From:
+info@officialmail.com
+
+Conclusion:
+Reply Address and From Address is NOT Same. This mail may be SPOOFED.
 _________________________________________________________
 ```
 
