@@ -18,12 +18,13 @@ options:
                         Name of the Output file
 ```
 
-## Run
+## Run All
 This command will get you Headers, Links, Attachments, and Digests with Investigations:
 ```
 python3 email-analyzer.py -f <eml file> 
 ```
 
+## Extract Outputs
 If you want to extract the outputs to a file you can use this commands:
 ```
 python3 email-analyzer.py -f <eml file> -o report.html
@@ -32,7 +33,6 @@ or
 ```
 python3 email-analyzer.py -f <eml file> -o report.json
 ```
-
 > Currently only supported **JSON** and **HTML** formats.
 
 ## To get ONLY Headers
@@ -131,7 +131,7 @@ _________________________________________________________
 ```
 python3 email-analyzer.py -f <eml file> --digests
 ```
-
+or
 ```
 python3 email-analyzer.py -f <eml file> -d
 ```
@@ -171,6 +171,14 @@ _________________________________________________________
 ```
 
 ## To Investigate Digests
+```
+python3 email-analyzer.py -f <eml file> --digests --investigate
+```
+or
+```
+python3 email-analyzer.py -f <eml file> -di
+```
+
 ```
  █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗██╗███████╗
 ██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝██╔════╝██║██╔════╝
@@ -222,7 +230,7 @@ _________________________________________________________
 ```
 python3 email-analyzer.py -f <eml file> --links
 ```
-
+or
 ```
 python3 email-analyzer.py -f <eml file> -l
 ```
@@ -241,6 +249,14 @@ python3 email-analyzer.py -f <eml file> -l
 ```
 
 ## To Investigate Links
+```
+python3 email-analyzer.py -f <eml file> --links --investigate
+```
+or
+```
+python3 email-analyzer.py -f <eml file> --li
+```
+
 ```
  █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗██╗███████╗
 ██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝██╔════╝██║██╔════╝
@@ -269,40 +285,61 @@ _________________________________________________________
 ```
 
 ## To get Attachments from eml file
-
 ```
 python3 email-analyzer.py -f <eml file> --attachments
 ```
+or
+```
+python3 email-analyzer.py -f <eml file> -a
+```
 
 ```
-    _   _   _             _                          _
-   / \ | |_| |_ __ _  ___| |__  _ __ ___   ___ _ __ | |_ ___
-  / _ \| __| __/ _` |/ __| '_ \| '_ ` _ \ / _ \ '_ \| __/ __|
- / ___ \ |_| || (_| | (__| | | | | | | | |  __/ | | | |_\__ \
-/_/   \_\__|\__\__,_|\___|_| |_|_| |_| |_|\___|_| |_|\__|___/
+ █████╗ ████████╗████████╗ █████╗  ██████╗██╗  ██╗███████╗
+██╔══██╗╚══██╔══╝╚══██╔══╝██╔══██╗██╔════╝██║  ██║██╔════╝
+███████║   ██║      ██║   ███████║██║     ███████║███████╗
+██╔══██║   ██║      ██║   ██╔══██║██║     ██╔══██║╚════██║
+██║  ██║   ██║      ██║   ██║  ██║╚██████╗██║  ██║███████║
+╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝
 
+[1]->example.pdf
+_________________________________________________________
+[2]->malicious.pdf
+_________________________________________________________
+```
 
-[1]example.pdf
-[2]malicious.pdf
- ___                     _   _             _   _
-|_ _|_ ____   _____  ___| |_(_) __ _  __ _| |_(_) ___  _ __
- | || '_ \ \ / / _ \/ __| __| |/ _` |/ _` | __| |/ _ \| '_ \
- | || | | \ V /  __/\__ \ |_| | (_| | (_| | |_| | (_) | | | |
-|___|_| |_|\_/ \___||___/\__|_|\__, |\__,_|\__|_|\___/|_| |_|
-                               |___/
+## To Investigate Attachments
+```
+python3 email-analyzer.py -f <eml file> --attachments --investigate
+```
+or
+```
+python3 email-analyzer.py -f <eml file> -ai
+```
+
+```
+ █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗██╗███████╗
+██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝██╔════╝██║██╔════╝
+███████║██╔██╗ ██║███████║██║   ╚████╔╝ ███████╗██║███████╗
+██╔══██║██║╚██╗██║██╔══██║██║    ╚██╔╝  ╚════██║██║╚════██║
+██║  ██║██║ ╚████║██║  ██║███████╗██║   ███████║██║███████║
+╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝   ╚══════╝╚═╝╚══════╝
 
 _________________________________________________________
-[1]
-[Virustotal]
-[md5]->https://www.virustotal.com/gui/search/81dc9bdb52d04dc20036dbd8313ed055
-[sha1]->https://www.virustotal.com/gui/search/7110eda4d09e062aa5e4a390b0a572ac0d2c0220
-[sha256]->https://www.virustotal.com/gui/search/03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4
+- example.pdf
+
+Virustotal:
+[Name Search]->https://www.virustotal.com/gui/search/example.pdf
+[MD5]->https://www.virustotal.com/gui/search/81dc9bdb52d04dc20036dbd8313ed055
+[SHA1]->https://www.virustotal.com/gui/search/7110eda4d09e062aa5e4a390b0a572ac0d2c0220
+[SHA256]->https://www.virustotal.com/gui/search/03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4
 _________________________________________________________
 _________________________________________________________
-[2]
-[Virustotal]
-[md5]->https://www.virustotal.com/gui/search/827ccb0eea8a706c4c34a16891f84e7b
-[sha1]->https://www.virustotal.com/gui/search/8cb2237d0679ca88db6464eac60da96345513964
-[sha256]->https://www.virustotal.com/gui/search/5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5
+- malicious.pdf
+
+Virustotal:
+[Name Search]->https://www.virustotal.com/gui/search/malicious.pdf
+[MD5]->https://www.virustotal.com/gui/search/827ccb0eea8a706c4c34a16891f84e7b
+[SHA1]->https://www.virustotal.com/gui/search/8cb2237d0679ca88db6464eac60da96345513964
+[SHA256]->https://www.virustotal.com/gui/search/5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5
 _________________________________________________________
 ```
