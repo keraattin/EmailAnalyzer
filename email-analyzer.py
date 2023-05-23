@@ -12,7 +12,10 @@ import quopri
 import os
 import json
 from datetime import datetime
-from banners import *
+from banners import (
+    get_introduction_banner,get_headers_banner,get_links_banner,
+    get_digests_banner,get_attachment_banner,get_investigation_banner
+)
 from html_generator import generate_table_from_json
 ##############################################################################
 
@@ -83,10 +86,10 @@ def get_headers(mail_data : str, investigation):
 def get_digests(mail_data : str, filename : str, investigation):
     '''Get Hash value of mail'''
     with open(filename, 'rb') as f:
-        file        = f.read()
-        file_md5    = hashlib.md5(file).hexdigest()
-        file_sha1   = hashlib.sha1(file).hexdigest()
-        file_sha256 = hashlib.sha256(file).hexdigest()
+        eml_file    = f.read()
+        file_md5    = hashlib.md5(eml_file).hexdigest()
+        file_sha1   = hashlib.sha1(eml_file).hexdigest()
+        file_sha256 = hashlib.sha256(eml_file).hexdigest()
 
     content_md5     = hashlib.md5(mail_data.encode("utf-8")).hexdigest()
     content_sha1    = hashlib.sha1(mail_data.encode("utf-8")).hexdigest()
@@ -379,7 +382,7 @@ if __name__ == '__main__':
         filename = str(args.filename)
         # Get File Format
         file_format = filename.split('.')[-1]
-        if not file_format in SUPPORTED_FILE_TYPES:
+        if file_format not in SUPPORTED_FILE_TYPES:
             print(f"{file_format} file format not supported")
             sys.exit(-1) #Exit with error code
     
