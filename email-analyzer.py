@@ -31,6 +31,9 @@ SUPPORTED_OUTPUT_TYPES = ["json","html"]
 LINK_REGEX = r'href=\"((?:\S)*)\"'
 MAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
 
+# Date Format
+DATE_FORMAT = "%B %d, %Y - %H:%M:%S"
+
 # Terminal Column Size
 TER_COL_SIZE = 60
 ##############################################################################
@@ -398,7 +401,7 @@ if __name__ == '__main__':
     }
     app_data["Information"]["Scan"] = {
         "Filename": filename,
-        "Generated": str(datetime.now())
+        "Generated": str(datetime.now().strftime(DATE_FORMAT))
     }
     
     # List of Arguments
