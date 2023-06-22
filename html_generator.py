@@ -56,7 +56,7 @@ def generate_headers_section(headers):
 def generate_links_section(links):
     # Data
     ######################################################################
-    html = f"""
+    html = """
         <h2 id="links-section" style="text-align: center;">Links</h2>
         <hr>
         <h3 id="links-data-section">Data</h3>
@@ -82,7 +82,7 @@ def generate_links_section(links):
 
     # Investigation
     ######################################################################
-    html += f"""
+    html += """
         <h3 id="links-investigation-section">Investigation</h3>
         <table class="table table-bordered table-striped">
             <thead>
@@ -169,7 +169,7 @@ def generate_attachment_section(attachments):
 def generate_digest_section(digests):
     # Data
     ######################################################################
-    html = f"""
+    html = """
         <h2 id="digests-section" style="text-align: center;">Digests</h2>
         <hr>
         <h3 id="digests-data-section">Data</h3>
@@ -195,7 +195,7 @@ def generate_digest_section(digests):
 
     # Investigation
     ######################################################################
-    html += f"""
+    html += """
         <h3 id="digests-investigation-section">Investigation</h3>
         <table class="table table-bordered table-striped">
             <thead>
@@ -225,6 +225,36 @@ def generate_digest_section(digests):
 def generate_table_from_json(json_obj):
     # Parse JSON object
     data = json_obj["Analysis"]
+    info_data = json_obj["Information"]
+
+    # Object Counts
+    if data.get("Headers"):
+        headers_cnt = len(data["Headers"]["Data"])
+        headers_inv_cnt = len(data["Headers"]["Investigation"])
+    else:
+        headers_cnt = 0
+        headers_inv_cnt = 0
+
+    if data.get("Links"):
+        links_cnt = len(data["Links"]["Data"])
+        links_inv_cnt = len(data["Links"]["Investigation"])
+    else:
+        links_cnt = 0
+        links_inv_cnt = 0
+
+    if data.get("Attachments"):
+        attach_cnt = len(data["Attachments"]["Data"])
+        attach_inv_cnt = len(data["Attachments"]["Investigation"])
+    else:
+        attach_cnt = 0
+        attach_inv_cnt = 0
+
+    if data.get("Digests"):
+        digest_cnt = len(data["Digests"]["Data"])
+        digest_inv_cnt = len(data["Digests"]["Investigation"])
+    else:
+        digest_cnt = 0
+        digest_inv_cnt = 0
 
     # Generate HTML table with Bootstrap classes
     html = f"""
@@ -245,8 +275,8 @@ def generate_table_from_json(json_obj):
                     Headers
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <a class="dropdown-item" href="#headers-data-section">Data <span class="badge badge-pill badge-dark">{len(data["Headers"]["Data"])}</span></a>
-                    <a class="dropdown-item" href="#headers-investigation-section">Investigation <span class="badge badge-pill badge-dark">{len(data["Headers"]["Investigation"])}</span></a>
+                    <a class="dropdown-item" href="#headers-data-section">Data <span class="badge badge-pill badge-dark">{ headers_cnt }</span></a>
+                    <a class="dropdown-item" href="#headers-investigation-section">Investigation <span class="badge badge-pill badge-dark">{ headers_inv_cnt }</span></a>
                     </div>
                 </li>
                 <li class="nav-item dropdown">
@@ -254,8 +284,8 @@ def generate_table_from_json(json_obj):
                     Links
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <a class="dropdown-item" href="#links-data-section">Data <span class="badge badge-pill badge-dark">{len(data["Links"]["Data"])}</span></a>
-                    <a class="dropdown-item" href="#links-investigation-section">Investigation <span class="badge badge-pill badge-dark">{len(data["Links"]["Investigation"])}</span></a>
+                    <a class="dropdown-item" href="#links-data-section">Data <span class="badge badge-pill badge-dark">{ links_cnt }</span></a>
+                    <a class="dropdown-item" href="#links-investigation-section">Investigation <span class="badge badge-pill badge-dark">{ links_inv_cnt }</span></a>
                     </div>
                 </li>
                 <li class="nav-item dropdown">
@@ -263,8 +293,8 @@ def generate_table_from_json(json_obj):
                     Attachments
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <a class="dropdown-item" href="#attachments-data-section">Data <span class="badge badge-pill badge-dark">{len(data["Attachments"]["Data"])}</span></a>
-                    <a class="dropdown-item" href="#attachments-investigation-section">Investigation <span class="badge badge-pill badge-dark">{len(data["Attachments"]["Investigation"])}</span></a>
+                    <a class="dropdown-item" href="#attachments-data-section">Data <span class="badge badge-pill badge-dark">{ attach_cnt }</span></a>
+                    <a class="dropdown-item" href="#attachments-investigation-section">Investigation <span class="badge badge-pill badge-dark">{ attach_inv_cnt }</span></a>
                     </div>
                 </li>
                 <li class="nav-item dropdown">
@@ -272,8 +302,8 @@ def generate_table_from_json(json_obj):
                     Digests
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <a class="dropdown-item" href="#digests-data-section">Data <span class="badge badge-pill badge-dark">{len(data["Digests"]["Data"])}</span></a>
-                    <a class="dropdown-item" href="#digests-investigation-section">Investigation <span class="badge badge-pill badge-dark">{len(data["Digests"]["Investigation"])}</span></a>
+                    <a class="dropdown-item" href="#digests-data-section">Data <span class="badge badge-pill badge-dark">{ digest_cnt }</span></a>
+                    <a class="dropdown-item" href="#digests-investigation-section">Investigation <span class="badge badge-pill badge-dark">{ digest_inv_cnt }</span></a>
                     </div>
                 </li>
                 </ul>
@@ -283,11 +313,58 @@ def generate_table_from_json(json_obj):
         <div class="container-fluid">
         """
     
+    html += f"""
+        <h2 style="text-align: center;">Information</h2>
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <h3 style="text-align: center;">Project</h3>
+                <table class="table table-bordered table-striped">
+                    <tbody>
+                        <tr>
+                            <td>Name</td>
+                            <td>{ info_data["Project"]["Name"] }</td>
+                        </tr>
+                        <tr>
+                            <td>Url</td>
+                            <td>{ info_data["Project"]["Url"] }</td>
+                        </tr>
+                        <tr>
+                            <td>Version</td>
+                            <td>{ info_data["Project"]["Version"] }</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h3 style="text-align: center;">Scan</h3>
+                <table class="table table-bordered table-striped">
+                    <tbody>
+                        <tr>
+                            <td>Name</td>
+                            <td>{ info_data["Scan"]["Filename"] }</td>
+                        </tr>
+                        <tr>
+                            <td>Generated</td>
+                            <td>{ info_data["Scan"]["Generated"] }</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    """
 
-    html += generate_headers_section(data["Headers"])
-    html += generate_links_section(data["Links"])
-    html += generate_attachment_section(data["Attachments"])
-    html += generate_digest_section(data["Digests"])
+    if data.get("Headers"):
+        html += generate_headers_section(data["Headers"])
+    
+    if data.get("Links"):
+        html += generate_links_section(data["Links"])
+
+    if data.get("Attachments"):
+        html += generate_attachment_section(data["Attachments"])
+
+    if data.get("Digests"):    
+        html += generate_digest_section(data["Digests"])
     
     
     html += """
