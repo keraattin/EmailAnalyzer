@@ -112,7 +112,7 @@ def generate_links_section(links):
 def generate_attachment_section(attachments):
     # Data
     ######################################################################
-    html = f"""
+    html = """
         <h2 id="attachments-section" style="text-align: center;">Attachments</h2>
         <hr>
         <h3 id="attachments-data-section">Data</h3>
@@ -138,7 +138,7 @@ def generate_attachment_section(attachments):
 
     # Investigation
     ######################################################################
-    html += f"""
+    html += """
         <h3 id="attachments-investigation-section">Investigation</h3>
         <table class="table table-bordered table-striped">
             <thead>
@@ -295,5 +295,5 @@ def generate_table_from_json(json_obj):
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
     """
-    
+
     return html

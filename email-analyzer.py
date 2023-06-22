@@ -25,7 +25,7 @@ from html_generator import generate_table_from_json
 SUPPORTED_FILE_TYPES = ["eml"]
 
 # Supported Output File Types
-SUPPORTED_OUTPUT_TYPES = ["json","html","txt"]
+SUPPORTED_OUTPUT_TYPES = ["json","html"]
 
 # REGEX
 LINK_REGEX = r'href=\"((?:\S)*)\"'
@@ -177,7 +177,7 @@ def get_attachments(filename : str, investigation):
         attached_file["filename"] = attachment.get_filename()
         attached_file["MD5"] = hashlib.md5(attachment.get_payload(decode=True)).hexdigest()
         attached_file["SHA1"] = hashlib.sha1(attachment.get_payload(decode=True)).hexdigest()
-        attached_file["SHA256"]=hashlib.sha256(attachment.get_payload(decode=True)).hexdigest()
+        attached_file["SHA256"] = hashlib.sha256(attachment.get_payload(decode=True)).hexdigest()
         attachments.append(attached_file)
 
     for index,attachment in enumerate(attachments,start=1):
@@ -186,7 +186,7 @@ def get_attachments(filename : str, investigation):
     # If investigation requested
     if investigation:
         for index,attachment in enumerate(attachments,start=1):
-            data["Attachments"]["Investigation"][attachment["filename"]] ={
+            data["Attachments"]["Investigation"][attachment["filename"]] = {
                 "Virustotal":{
                     "Name Search":f'https://www.virustotal.com/gui/search/{attachment["filename"]}',
                     "MD5":f'https://www.virustotal.com/gui/search/{attachment["MD5"]}',
