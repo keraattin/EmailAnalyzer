@@ -3,10 +3,10 @@ import json
 def generate_headers_section(headers):
     # Data
     ######################################################################
-    html = f"""
-        <h2 id="headers-section" style="text-align: center;">Headers</h2>
+    html = """
+        <h2 id="headers-section" style="text-align: center;"><i class="fa-solid fa-code"></i> Headers</h2>
         <hr>
-        <h3 id="headers-data-section">Data</h3>
+        <h3 id="headers-data-section"><i class="fa-solid fa-chart-column"></i> Data</h3>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -31,7 +31,7 @@ def generate_headers_section(headers):
     # Investigation
     ######################################################################
     html += """
-        <h3 id="headers-investigation-section">Investigation</h3>
+        <h3 id="headers-investigation-section"><i class="fa-solid fa-magnifying-glass"></i> Investigation</h3>
         <div class="row">
     """
     for index,values in headers["Investigation"].items():
@@ -57,9 +57,9 @@ def generate_links_section(links):
     # Data
     ######################################################################
     html = """
-        <h2 id="links-section" style="text-align: center;">Links</h2>
+        <h2 id="links-section" style="text-align: center;"><i class="fa-solid fa-link"></i> Links</h2>
         <hr>
-        <h3 id="links-data-section">Data</h3>
+        <h3 id="links-data-section"><i class="fa-solid fa-chart-column"></i> Data</h3>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -83,7 +83,7 @@ def generate_links_section(links):
     # Investigation
     ######################################################################
     html += """
-        <h3 id="links-investigation-section">Investigation</h3>
+        <h3 id="links-investigation-section"><i class="fa-solid fa-magnifying-glass"></i> Investigation</h3>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -113,9 +113,9 @@ def generate_attachment_section(attachments):
     # Data
     ######################################################################
     html = """
-        <h2 id="attachments-section" style="text-align: center;">Attachments</h2>
+        <h2 id="attachments-section" style="text-align: center;"><i class="fa-solid fa-paperclip"></i> Attachments</h2>
         <hr>
-        <h3 id="attachments-data-section">Data</h3>
+        <h3 id="attachments-data-section"><i class="fa-solid fa-chart-column"></i> Data</h3>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -139,7 +139,7 @@ def generate_attachment_section(attachments):
     # Investigation
     ######################################################################
     html += """
-        <h3 id="attachments-investigation-section">Investigation</h3>
+        <h3 id="attachments-investigation-section"><i class="fa-solid fa-magnifying-glass"></i> Investigation</h3>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -170,9 +170,9 @@ def generate_digest_section(digests):
     # Data
     ######################################################################
     html = """
-        <h2 id="digests-section" style="text-align: center;">Digests</h2>
+        <h2 id="digests-section" style="text-align: center;"><i class="fa-solid fa-binary-circle-check"></i> Digests</h2>
         <hr>
-        <h3 id="digests-data-section">Data</h3>
+        <h3 id="digests-data-section"><i class="fa-solid fa-chart-column"></i> Data</h3>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -196,7 +196,7 @@ def generate_digest_section(digests):
     # Investigation
     ######################################################################
     html += """
-        <h3 id="digests-investigation-section">Investigation</h3>
+        <h3 id="digests-investigation-section"><i class="fa-solid fa-magnifying-glass"></i> Investigation</h3>
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -260,10 +260,12 @@ def generate_table_from_json(json_obj):
     html = f"""
         <head>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+            <script async defer src="https://buttons.github.io/buttons.js"></script>
         </head>
 
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="#">Email Analyzer</a>
+            <a class="navbar-brand" href="#"><i class="fa fa-envelope"></i> Email Analyzer</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -308,17 +310,28 @@ def generate_table_from_json(json_obj):
                 </li>
                 </ul>
             </div>
+
+            <div class="d-flex">
+                <!-- Star -->
+                <a class="github-button" href="https://github.com/keraattin/EmailAnalyzer" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star keraattin/EmailAnalyzer on GitHub">Star</a>
+                &nbsp;
+                <!-- Fork -->
+                <a class="github-button" href="https://github.com/keraattin/EmailAnalyzer/fork" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Fork keraattin/EmailAnalyzer on GitHub">Fork</a>
+                &nbsp;
+                <!-- Follow -->
+                <a class="github-button" href="https://github.com/keraattin" data-size="large" data-show-count="true" aria-label="Follow @keraattin on GitHub">Follow @keraattin</a>
+            </div>
         </nav>
 
         <div class="container-fluid">
         """
     
     html += f"""
-        <h2 style="text-align: center;">Information</h2>
+        <h2 style="text-align: center;"><i class="fa-solid fa-circle-info"></i> Information</h2>
         <hr>
         <div class="row">
             <div class="col-md-6">
-                <h3 style="text-align: center;">Project</h3>
+                <h3 style="text-align: center;"><i class="fa-solid fa-diagram-project"></i> Project</h3>
                 <table class="table table-bordered table-striped">
                     <tbody>
                         <tr>
@@ -327,7 +340,7 @@ def generate_table_from_json(json_obj):
                         </tr>
                         <tr>
                             <td>Url</td>
-                            <td>{ info_data["Project"]["Url"] }</td>
+                            <td><a href="{ info_data["Project"]["Url"] }" target='_blank'>{ info_data["Project"]["Url"] }</a></td>
                         </tr>
                         <tr>
                             <td>Version</td>
@@ -337,7 +350,7 @@ def generate_table_from_json(json_obj):
                 </table>
             </div>
             <div class="col-md-6">
-                <h3 style="text-align: center;">Scan</h3>
+                <h3 style="text-align: center;"><i class="fa-solid fa-satellite-dish"></i> Scan</h3>
                 <table class="table table-bordered table-striped">
                     <tbody>
                         <tr>
