@@ -433,13 +433,15 @@ if __name__ == '__main__':
             attachments = get_attachments(filename, args.investigate)
             app_data["Analysis"].update(attachments)
         
-        # Print data to Terminal
-        print_data(app_data)
-
-        # If printing to file requested
+        # If write to file requested
         if args.output:
             output_filename = str(args.output) # Filename
             write_to_file(output_filename, app_data)
+            get_introduction_banner()
+            print(f"Your data has been written to the {output_filename}")
+        else:
+            # Print data to Terminal
+            print_data(app_data)
             
     else:
         # If no argument given then run all processes
@@ -452,7 +454,6 @@ if __name__ == '__main__':
         digests = get_digests(data, filename, investigate)
         app_data["Analysis"].update(digests)
 
-
         # Get & Print Links
         links = get_links(data, investigate)
         app_data["Analysis"].update(links)
@@ -461,11 +462,13 @@ if __name__ == '__main__':
         attachments = get_attachments(filename, investigate)
         app_data["Analysis"].update(attachments)
 
-        # Print data to Terminal
-        print_data(app_data)
-
         # If write to file requested
         if args.output:
             output_filename = str(args.output) # Filename
             write_to_file(output_filename, app_data)
+            get_introduction_banner()
+            print(f"Your data has been written to the {output_filename}")
+        else:
+            # Print data to Terminal
+            print_data(app_data)
 ##############################################################################
