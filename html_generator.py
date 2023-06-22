@@ -170,7 +170,7 @@ def generate_digest_section(digests):
     # Data
     ######################################################################
     html = """
-        <h2 id="digests-section" style="text-align: center;"><i class="fa-solid fa-binary-circle-check"></i> Digests</h2>
+        <h2 id="digests-section" style="text-align: center;"><i class="fa-solid fa-hashtag"></i> Digests</h2>
         <hr>
         <h3 id="digests-data-section"><i class="fa-solid fa-chart-column"></i> Data</h3>
         <table class="table table-bordered table-striped">
