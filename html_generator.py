@@ -98,7 +98,7 @@ def generate_links_section(links):
         html += "<tr>"
         html += "<td>{}</td><td>".format(index)
         for k,v in values.items():
-            html += f"<b><a href='{v}'>{k} Scan</a></b>&nbsp;&nbsp;"
+            html += f"<b><a href='{v}' target='_blank'>{k} Scan</a></b>&nbsp;&nbsp;"
         html += "</td></tr>"
         
     html += """
@@ -155,7 +155,7 @@ def generate_attachment_section(attachments):
         html += "<td>{}</td><td>".format(index)
         for k,v in values.items():
             for x,y in v.items():
-                html += f"<b><a href='{y}'>{x} Scan({k})</a></b><br>"
+                html += f"<b><a href='{y}' target='_blank'>{x} Scan({k})</a></b><br>"
         html += "</td></tr>"
         
     html += """
@@ -211,7 +211,7 @@ def generate_digest_section(digests):
         html += "<tr>"
         html += "<td>{}</td><td>".format(index)
         for k,v in values.items():
-            html += f"<b><a href='{v}'>{k} scan</a></b><br>"
+            html += f"<b><a href='{v}' target='_blank'>{k} scan</a></b><br>"
         html += "</td></tr>"
         
     html += """
