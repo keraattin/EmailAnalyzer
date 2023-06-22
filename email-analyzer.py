@@ -391,10 +391,13 @@ if __name__ == '__main__':
 
     # Create JSON data
     app_data = json.loads('{"Information": {}, "Analysis":{}}')
-    app_data["Information"] = {
-        "Project":"EmailAnalyzer",
+    app_data["Information"]["Project"] = {
+        "Name":"EmailAnalyzer",
         "Url":"https://github.com/keraattin/EmailAnalyzer",
-        "Version": "1.0",
+        "Version": "2.0",
+    }
+    app_data["Information"]["Scan"] = {
+        "Filename": filename,
         "Generated": str(datetime.now())
     }
     
@@ -432,7 +435,8 @@ if __name__ == '__main__':
 
         # If printing to file requested
         if args.output:
-            write_to_file(args.output, app_data)
+            output_filename = str(args.output) # Filename
+            write_to_file(output_filename, app_data)
             
     else:
         # If no argument given then run all processes
