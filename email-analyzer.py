@@ -329,34 +329,34 @@ if __name__ == '__main__':
         "-f",
         "--filename",
         type=str,
-        help="Name of EML file",
+        help="Name of the EML file",
         required=True
     )
     parser.add_argument(
         "-H",
         "--headers",
-        help="Headers of the eml file",
+        help="To get the Headers of the Email",
         required=False,
         action="store_true"
     )
     parser.add_argument(
         "-d",
         "--digests",
-        help="Digests of the eml file",
+        help="To get the Digests of the Email",
         required=False,
         action="store_true"
     )
     parser.add_argument(
         "-l",
         "--links",
-        help="Links from the eml file",
+        help="To get the Links from the Email",
         required=False,
         action="store_true"
     )
     parser.add_argument(
         "-a",
         "--attachments",
-        help="Attachments from the eml file",
+        help="To get the Attachments from the Email",
         required=False,
         action="store_true"
     )
@@ -371,7 +371,7 @@ if __name__ == '__main__':
         "-o",
         "--output",
         type=str,
-        help="Name of the Output file",
+        help="Name of the Output file (Only HTML or JSON format supported)",
         required=False
     )
     args = parser.parse_args()
