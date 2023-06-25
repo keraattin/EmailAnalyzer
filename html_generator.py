@@ -1,4 +1,5 @@
 import json
+from html import escape
 
 def generate_headers_section(headers):
     # Data
@@ -18,9 +19,7 @@ def generate_headers_section(headers):
     """
     for key,value in headers["Data"].items():
         # Populate table rows
-        html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(key,value)
-        html += "</tr>"
+        html += f"<tr><td>{ str(key) }</td><td>{ escape(str(value)) }</td></tr>"
         
     html += """
         </tbody>
