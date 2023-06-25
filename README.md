@@ -1,3 +1,5 @@
+![Python](https://img.shields.io/badge/python-3.10-blue.svg) 
+![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 # EmailAnalyzer
 With EmailAnalyzer you can able to analyze your suspicious emails. You can extract headers, links and hashes from the .eml file
 
