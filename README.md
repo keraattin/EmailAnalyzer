@@ -8,14 +8,14 @@ usage: email-analyzer.py [-h] -f FILENAME [-H] [-d] [-l] [-a] [-i] [-o OUTPUT]
 options:
   -h, --help            show this help message and exit
   -f FILENAME, --filename FILENAME
-                        Name of EML file
-  -H, --headers         Headers of the eml file
-  -d, --digests         Digests of the eml file
-  -l, --links           Links from the eml file
-  -a, --attachments     Attachments from the eml file
+                        Name of the EML file
+  -H, --headers         To get the Headers of the Email
+  -d, --digests         To get the Digests of the Email
+  -l, --links           To get the Links from the Email
+  -a, --attachments     To get the Attachments from the Email
   -i, --investigate     Activate if you want an investigation
   -o OUTPUT, --output OUTPUT
-                        Name of the Output file
+                        Name of the Output file (Only HTML or JSON format supported)
 ```
 
 ## Run All
