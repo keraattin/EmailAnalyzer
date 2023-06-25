@@ -50,6 +50,10 @@ def get_headers(mail_data : str, investigation):
     for k,v in headers.items():
         data["Headers"]["Data"][k.lower()] = v.replace('\t', '').replace('\n', '')
     
+    # To get all 'Received' headers
+    if data["Headers"]["Data"].get('received'):
+        data["Headers"]["Data"]["received"] = ' '.join(headers.get_all('Received')).replace('\t', '').replace('\n', '')
+
     # If investigation requested
     if investigation:
         # X-Sender-Ip Investigation
