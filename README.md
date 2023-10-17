@@ -32,7 +32,7 @@ If you want to extract the outputs to a file you can use this commands:
 python3 email-analyzer.py -f <eml file> -o report.html
 ```
 Check the ![Wiki Page](https://github.com/keraattin/EmailAnalyzer/wiki/Generate-an-HTML-Report) for details
-
+![image](https://github.com/keraattin/EmailAnalyzer/assets/6709252/b449246e-881c-4d2d-822b-71c4d4a21ca1)
 or 
 ```
 python3 email-analyzer.py -f <eml file> -o report.json
