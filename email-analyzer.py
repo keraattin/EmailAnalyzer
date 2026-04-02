@@ -3,7 +3,7 @@
 # Libraries
 ##############################################################################
 from email.parser import HeaderParser
-from email import message_from_file,policy
+from email import message_from_binary_file,policy
 from argparse import ArgumentParser
 import sys
 import hashlib
@@ -175,8 +175,8 @@ def get_links(mail_data : str, investigation):
 
 def get_attachments(filename : str, investigation):
     ''' Get Attachments from eml file'''
-    with open(filename, "r") as f:
-        msg = message_from_file(f, policy=policy.default)
+    with open(filename, "rb") as f:
+        msg = message_from_binary_file(f, policy=policy.default)
     
     # Create JSON data
     data = json.loads('{"Attachments":{"Data":{},"Investigation":{}}}')
