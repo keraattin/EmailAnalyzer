@@ -3,9 +3,14 @@ Tests for get_headers()
 
 Covers:
 - General header extraction
+- Header key normalization (lowercase)
+- Tab/newline stripping from values
+- Multiple Received headers joined
 - Investigation mode (X-Sender-IP links)
 - Spoof detection: spoofed email
 - Spoof detection: not spoofed email
+- Spoof detection: From with display name + angle bracket email
+- Spoof detection: no From header skips check
 - Regression #26: display-name-only From header no longer crashes
 """
 
@@ -25,6 +30,41 @@ class TestHeaderExtraction:
         assert "mime-version" in data
         assert "content-type" in data
 
+    def test_header_keys_are_lowercase(self):
+        mail_data = load_fixture("basic.eml")
+        result = get_headers(mail_data, investigation=False)
+        data = result["Headers"]["Data"]
+
+        for key in data:
+            assert key == key.lower(), f"Header key '{key}' is not lowercase"
+
+    def test_tabs_stripped_from_header_values(self):
+        mail_data = load_fixture("headers_with_tabs.eml")
+        result = get_headers(mail_data, investigation=False)
+        data = result["Headers"]["Data"]
+
+        for key, value in data.items():
+            assert "\t" not in value, f"Tab found in header '{key}': {repr(value)}"
+
+    def test_newlines_stripped_from_header_values(self):
+        mail_data = load_fixture("basic.eml")
+        result = get_headers(mail_data, investigation=False)
+        data = result["Headers"]["Data"]
+
+        for key, value in data.items():
+            assert "\n" not in value, f"Newline found in header '{key}': {repr(value)}"
+
+    def test_multiple_received_headers_joined(self):
+        mail_data = load_fixture("multi_received.eml")
+        result = get_headers(mail_data, investigation=False)
+        data = result["Headers"]["Data"]
+
+        assert "received" in data
+        # All 3 relay hops must appear in the single joined value
+        assert "mail1.example.com" in data["received"]
+        assert "mail2.example.com" in data["received"]
+        assert "mail3.example.com" in data["received"]
+
     def test_investigation_not_run_when_disabled(self):
         mail_data = load_fixture("basic.eml")
         result = get_headers(mail_data, investigation=False)
@@ -39,19 +79,34 @@ class TestHeaderExtraction:
 
 
 class TestInvestigationMode:
-    def test_x_sender_ip_generates_investigation_links(self):
+    def test_x_sender_ip_generates_virustotal_link(self):
         mail_data = load_fixture("basic.eml")
         result = get_headers(mail_data, investigation=True)
         inv = result["Headers"]["Investigation"]
 
         assert "X-Sender-Ip" in inv
         assert "192.168.1.100" in inv["X-Sender-Ip"]["Virustotal"]
+
+    def test_x_sender_ip_generates_abuseipdb_link(self):
+        mail_data = load_fixture("basic.eml")
+        result = get_headers(mail_data, investigation=True)
+        inv = result["Headers"]["Investigation"]
+
         assert "192.168.1.100" in inv["X-Sender-Ip"]["Abuseipdb"]
+        assert "abuseipdb.com" in inv["X-Sender-Ip"]["Abuseipdb"]
 
     def test_no_x_sender_ip_skips_investigation(self):
         mail_data = load_fixture("spoofed.eml")
         result = get_headers(mail_data, investigation=True)
         assert "X-Sender-Ip" not in result["Headers"]["Investigation"]
+
+    def test_investigation_structure_has_both_links(self):
+        mail_data = load_fixture("basic.eml")
+        result = get_headers(mail_data, investigation=True)
+        inv = result["Headers"]["Investigation"]["X-Sender-Ip"]
+
+        assert "Virustotal" in inv
+        assert "Abuseipdb" in inv
 
 
 class TestSpoofDetection:
@@ -73,9 +128,35 @@ class TestSpoofDetection:
         assert spoof["Reply-To"] == "sender@example.com"
         assert "SAME" in spoof["Conclusion"]
 
+    def test_spoof_check_has_required_fields(self):
+        mail_data = load_fixture("spoofed.eml")
+        result = get_headers(mail_data, investigation=True)
+        spoof = result["Headers"]["Investigation"]["Spoof Check"]
+
+        assert "From" in spoof
+        assert "Reply-To" in spoof
+        assert "Conclusion" in spoof
+
     def test_no_reply_to_skips_spoof_check(self):
         mail_data = load_fixture("basic.eml")
         result = get_headers(mail_data, investigation=True)
+        assert "Spoof Check" not in result["Headers"]["Investigation"]
+
+    def test_from_with_display_name_extracts_email_correctly(self):
+        """From: "Bank Admin" <admin@bank.com> — spoof check should use admin@bank.com."""
+        mail_data = load_fixture("display_name_email_from.eml")
+        result = get_headers(mail_data, investigation=True)
+        spoof = result["Headers"]["Investigation"]["Spoof Check"]
+
+        assert spoof["From"] == "admin@bank.com"
+        assert spoof["Reply-To"] == "attacker@evil.com"
+        assert "SPOOFED" in spoof["Conclusion"]
+
+    def test_no_from_header_skips_spoof_check(self):
+        """If From header is absent, spoof check must be skipped entirely."""
+        mail_data = load_fixture("display_name_only.eml")
+        result = get_headers(mail_data, investigation=False)
+        # investigation=False — spoof check section should not exist
         assert "Spoof Check" not in result["Headers"]["Investigation"]
 
 
@@ -85,7 +166,6 @@ class TestRegressionBug26:
     def test_display_name_only_from_does_not_crash(self):
         """Previously raised IndexError: list index out of range."""
         mail_data = load_fixture("display_name_only.eml")
-        # Must not raise any exception
         result = get_headers(mail_data, investigation=True)
         assert result is not None
 
@@ -94,3 +174,14 @@ class TestRegressionBug26:
         result = get_headers(mail_data, investigation=True)
         spoof = result["Headers"]["Investigation"]["Spoof Check"]
         assert "Could not parse" in spoof["Conclusion"]
+
+    def test_display_name_only_preserves_raw_values_in_output(self):
+        """Raw header values should still be reported even when unparseable."""
+        mail_data = load_fixture("display_name_only.eml")
+        result = get_headers(mail_data, investigation=True)
+        spoof = result["Headers"]["Investigation"]["Spoof Check"]
+
+        assert "Reply-To" in spoof
+        assert "From" in spoof
+        assert spoof["Reply-To"] != ""
+        assert spoof["From"] != ""

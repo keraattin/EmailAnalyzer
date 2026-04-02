@@ -4,8 +4,14 @@ Tests for get_links()
 Covers:
 - Basic link extraction from HTML email
 - No links returns empty result
-- Investigation mode generates correct URLs
-- Duplicate links are deduplicated
+- Empty href filtered out
+- Duplicate links deduplicated
+- Links indexed from 1
+- Investigation mode: VirusTotal and URLScan links
+- Investigation mode: https:// protocol stripped
+- Investigation mode: http:// protocol stripped
+- Investigation mode: count matches data count
+- Investigation mode: no links = empty investigation
 - Regression #25: quoted-printable decode no longer raises TypeError
 """
 
@@ -34,12 +40,33 @@ class TestLinkExtraction:
         keys = list(result["Links"]["Data"].keys())
         assert keys[0] == "1"
 
-    def test_duplicate_links_deduplicated(self):
-        # basic.eml has 2 distinct links — verify no duplicates
+    def test_links_are_sequential_integers(self):
         mail_data = load_fixture("basic.eml")
+        result = get_links(mail_data, investigation=False)
+        keys = list(result["Links"]["Data"].keys())
+        for i, key in enumerate(keys, start=1):
+            assert key == str(i)
+
+    def test_duplicate_links_deduplicated(self):
+        """Same URL appearing twice must appear only once in results."""
+        mail_data = load_fixture("http_links.eml")
         result = get_links(mail_data, investigation=False)
         values = list(result["Links"]["Data"].values())
         assert len(values) == len(set(values))
+
+    def test_empty_href_filtered_out(self):
+        """href="" must not appear in the extracted links."""
+        mail_data = load_fixture("http_links.eml")
+        result = get_links(mail_data, investigation=False)
+        values = list(result["Links"]["Data"].values())
+        assert "" not in values
+
+    def test_http_links_extracted(self):
+        """http:// links (not just https://) must be extracted."""
+        mail_data = load_fixture("http_links.eml")
+        result = get_links(mail_data, investigation=False)
+        values = list(result["Links"]["Data"].values())
+        assert any("http://insecure-site.com" in v for v in values)
 
     def test_returns_correct_structure(self):
         mail_data = load_fixture("basic.eml")
@@ -53,6 +80,11 @@ class TestInvestigationMode:
     def test_investigation_disabled_returns_empty(self):
         mail_data = load_fixture("basic.eml")
         result = get_links(mail_data, investigation=False)
+        assert result["Links"]["Investigation"] == {}
+
+    def test_no_links_investigation_is_empty(self):
+        mail_data = load_fixture("no_links.eml")
+        result = get_links(mail_data, investigation=True)
         assert result["Links"]["Investigation"] == {}
 
     def test_investigation_generates_virustotal_links(self):
@@ -74,15 +106,37 @@ class TestInvestigationMode:
             assert "Urlscan" in entry
             assert "urlscan.io" in entry["Urlscan"]
 
-    def test_investigation_strips_protocol_from_urls(self):
+    def test_investigation_count_matches_data_count(self):
+        """Every extracted link must have a corresponding investigation entry."""
+        mail_data = load_fixture("basic.eml")
+        result = get_links(mail_data, investigation=True)
+        assert len(result["Links"]["Data"]) == len(result["Links"]["Investigation"])
+
+    def test_https_protocol_stripped_in_investigation(self):
         mail_data = load_fixture("basic.eml")
         result = get_links(mail_data, investigation=True)
         inv = result["Links"]["Investigation"]
 
         for entry in inv.values():
-            # VirusTotal search URL should not contain "https://https://"
             assert "https://https://" not in entry["Virustotal"]
+
+    def test_http_protocol_stripped_in_investigation(self):
+        mail_data = load_fixture("http_links.eml")
+        result = get_links(mail_data, investigation=True)
+        inv = result["Links"]["Investigation"]
+
+        for entry in inv.values():
             assert "http://http://" not in entry["Virustotal"]
+
+    def test_investigation_urlscan_link_contains_domain(self):
+        mail_data = load_fixture("basic.eml")
+        result = get_links(mail_data, investigation=True)
+        inv = result["Links"]["Investigation"]
+
+        for entry in inv.values():
+            urlscan = entry["Urlscan"]
+            # Must contain the domain, not just the base urlscan URL
+            assert urlscan != "https://urlscan.io/search/#"
 
 
 class TestRegressionBug25:
@@ -91,7 +145,6 @@ class TestRegressionBug25:
     def test_qp_email_does_not_raise_typeerror(self):
         """Previously: quopri.decodestring(str) raised TypeError."""
         mail_data = load_fixture("quoted_printable.eml")
-        # Must not raise any exception
         result = get_links(mail_data, investigation=False)
         assert result is not None
 
@@ -109,6 +162,15 @@ class TestRegressionBug25:
         """Emails without QP encoding must not be run through quopri."""
         mail_data = load_fixture("basic.eml")
         result = get_links(mail_data, investigation=False)
-        # basic.eml has no Content-Transfer-Encoding: quoted-printable
-        # links should still be found correctly
         assert len(result["Links"]["Data"]) == 2
+
+    def test_qp_email_investigation_works(self):
+        """Investigation mode must also work on QP-decoded links."""
+        mail_data = load_fixture("quoted_printable.eml")
+        result = get_links(mail_data, investigation=True)
+        inv = result["Links"]["Investigation"]
+
+        assert len(inv) >= 2
+        for entry in inv.values():
+            assert "Virustotal" in entry
+            assert "Urlscan" in entry
