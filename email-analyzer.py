@@ -66,27 +66,31 @@ def get_headers(mail_data : str, investigation):
         # Reply To - From Investigation (Spoof Check)
         if data["Headers"]["Data"].get("reply-to") and data["Headers"]["Data"].get("from"):
             # Get Reply-To Address
-            replyto = re.findall(
-                    MAIL_REGEX,data["Headers"]["Data"]["reply-to"]
-            )[0]
-            
-            # Get From Address
-            mailfrom = re.findall(
-                    MAIL_REGEX,data["Headers"]["Data"]["from"]
-            )[0]
-            
-            # Check if From & Reply-To is same
-            if replyto == mailfrom:
-                conclusion = "Reply Address and From Address is SAME."
+            replyto_matches = re.findall(MAIL_REGEX, data["Headers"]["Data"]["reply-to"])
+            mailfrom_matches = re.findall(MAIL_REGEX, data["Headers"]["Data"]["from"])
+
+            if not replyto_matches or not mailfrom_matches:
+                data["Headers"]["Investigation"]["Spoof Check"] = {
+                    "Reply-To": data["Headers"]["Data"]["reply-to"],
+                    "From": data["Headers"]["Data"]["from"],
+                    "Conclusion": "Could not parse email address from Reply-To or From header."
+                }
             else:
-                conclusion = "Reply Address and From Address is NOT Same. This mail may be SPOOFED."
-            
-            # Write data to JSON
-            data["Headers"]["Investigation"]["Spoof Check"] = {
-                "Reply-To" : replyto,
-                "From": mailfrom,
-                "Conclusion":conclusion
-            }
+                replyto  = replyto_matches[0]
+                mailfrom = mailfrom_matches[0]
+
+                # Check if From & Reply-To is same
+                if replyto == mailfrom:
+                    conclusion = "Reply Address and From Address is SAME."
+                else:
+                    conclusion = "Reply Address and From Address is NOT Same. This mail may be SPOOFED."
+
+                # Write data to JSON
+                data["Headers"]["Investigation"]["Spoof Check"] = {
+                    "Reply-To" : replyto,
+                    "From": mailfrom,
+                    "Conclusion": conclusion
+                }
 
     return data
 
