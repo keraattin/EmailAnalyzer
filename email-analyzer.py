@@ -139,8 +139,8 @@ def get_links(mail_data : str, investigation):
     '''Get Links from mail data'''
 
     # If content of eml file is Encoded -> Decode
-    if "Content-Transfer-Encoding" in mail_data:
-        mail_data = str(quopri.decodestring(mail_data)) # Decode
+    if "Content-Transfer-Encoding: quoted-printable" in mail_data:
+        mail_data = quopri.decodestring(mail_data.encode()).decode("utf-8", errors="replace")
 
     # Find the Links    
     links = re.findall(LINK_REGEX, mail_data)
