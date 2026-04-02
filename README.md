@@ -349,3 +349,44 @@ Virustotal:
 [SHA256]->https://www.virustotal.com/gui/search/5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5
 _________________________________________________________
 ```
+
+## Testing
+
+The test suite uses [pytest](https://pytest.org). Install it before running tests:
+```
+pip install pytest
+```
+
+Run all tests from the project root:
+```
+cd tests
+python3 -m pytest -v
+```
+
+Run a specific test file:
+```
+python3 -m pytest test_headers.py -v
+python3 -m pytest test_links.py -v
+python3 -m pytest test_digests.py -v
+python3 -m pytest test_attachments.py -v
+```
+
+### Test Structure
+```
+tests/
+├── fixtures/               # Sample .eml files used by tests
+│   ├── basic.eml
+│   ├── spoofed.eml
+│   ├── not_spoofed.eml
+│   ├── display_name_only.eml
+│   ├── quoted_printable.eml
+│   ├── no_links.eml
+│   ├── binary_attachment.eml
+│   ├── multi_attachment.eml
+│   └── no_attachment.eml
+├── conftest.py             # Shared fixtures and module loader
+├── test_headers.py         # Tests for get_headers()
+├── test_links.py           # Tests for get_links()
+├── test_digests.py         # Tests for get_digests()
+└── test_attachments.py     # Tests for get_attachments()
+```
