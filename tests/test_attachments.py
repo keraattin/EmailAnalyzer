@@ -238,6 +238,37 @@ class TestInvestigationMode:
         assert result["Attachments"]["Investigation"] == {}
 
 
+class TestRegressionBug28:
+    """Regression tests for Bug #28 — TypeError when get_payload(decode=True) returns None."""
+
+    def test_none_payload_does_not_crash(self):
+        """multipart/alternative sub-parts return None payload — must not raise TypeError."""
+        result = get_attachments(fixture_path("multipart_alternative.eml"), investigation=False)
+        assert result is not None
+
+    def test_none_payload_part_is_skipped(self):
+        """The undecodable sub-part must be skipped; the real attachment must still appear."""
+        result = get_attachments(fixture_path("multipart_alternative.eml"), investigation=False)
+        data = result["Attachments"]["Data"]
+
+        assert len(data) == 1
+        assert data["1"] == "real.pdf"
+
+    def test_none_payload_real_attachment_hashes_computed(self):
+        """After skipping None payload, the real attachment must still be hashed correctly."""
+        result = get_attachments(fixture_path("multipart_alternative.eml"), investigation=True)
+        inv = result["Attachments"]["Investigation"]["real.pdf"]["Virustotal"]
+
+        assert len(inv["MD5"].split("/")[-1])    == 32
+        assert len(inv["SHA1"].split("/")[-1])   == 40
+        assert len(inv["SHA256"].split("/")[-1]) == 64
+
+    def test_email_with_only_none_payload_returns_empty(self):
+        """An email where all attachment parts have None payload must return empty data."""
+        result = get_attachments(fixture_path("no_attachment.eml"), investigation=False)
+        assert result["Attachments"]["Data"] == {}
+
+
 class TestRegressionBug27:
     """Regression tests for Bug #27 — UnicodeDecodeError on binary attachments."""
 

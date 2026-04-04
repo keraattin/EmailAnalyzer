@@ -184,11 +184,14 @@ def get_attachments(filename : str, investigation):
     # Get Attachments from Mail
     attachments = []
     for attachment in msg.iter_attachments():
+        payload = attachment.get_payload(decode=True)
+        if payload is None:
+            continue
         attached_file = {}
         attached_file["filename"] = attachment.get_filename()
-        attached_file["MD5"] = hashlib.md5(attachment.get_payload(decode=True)).hexdigest()
-        attached_file["SHA1"] = hashlib.sha1(attachment.get_payload(decode=True)).hexdigest()
-        attached_file["SHA256"] = hashlib.sha256(attachment.get_payload(decode=True)).hexdigest()
+        attached_file["MD5"]    = hashlib.md5(payload).hexdigest()
+        attached_file["SHA1"]   = hashlib.sha1(payload).hexdigest()
+        attached_file["SHA256"] = hashlib.sha256(payload).hexdigest()
         attachments.append(attached_file)
 
     for index,attachment in enumerate(attachments,start=1):
