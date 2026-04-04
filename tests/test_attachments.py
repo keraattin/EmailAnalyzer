@@ -4,14 +4,17 @@ Tests for get_attachments()
 Covers:
 - Binary attachment detected and hashed correctly
 - Plain text attachment detected and hashed correctly
-- Multiple attachments all detected
+- Image attachment (image/png MIME type) detected and hashed
+- Multiple attachments all detected with sequential indexing
 - No attachments returns empty result
-- Attachments indexed from "1"
+- Attachments indexed from "1", sequential integers
 - Attachment count matches data length
-- Hash values are valid hex strings
+- Hash values are valid hex strings (MD5=32, SHA1=40, SHA256=64)
+- MD5/SHA1/SHA256 each match independently computed value
 - Hash is deterministic across calls
-- Hash matches independently computed value
-- Investigation mode generates VirusTotal links (name + all 3 hashes)
+- Different attachments produce different hashes
+- Investigation mode: VirusTotal links (name + all 3 hashes)
+- Investigation mode: exact VT URL format
 - Investigation count matches data count
 - Regression #27: binary attachments no longer cause UnicodeDecodeError
 """
@@ -58,6 +61,14 @@ class TestAttachmentExtraction:
         assert "config.txt"   in names
         assert "payload.exe"  in names
 
+    def test_image_attachment_detected(self):
+        """image/png MIME type must be detected like any other attachment."""
+        result = get_attachments(fixture_path("image_attachment.eml"), investigation=False)
+        data = result["Attachments"]["Data"]
+
+        assert len(data) == 1
+        assert data["1"] == "logo.png"
+
     def test_no_attachments_returns_empty(self):
         result = get_attachments(fixture_path("no_attachment.eml"), investigation=False)
         assert result["Attachments"]["Data"] == {}
@@ -71,6 +82,12 @@ class TestAttachmentExtraction:
     def test_attachment_count_matches_data_length(self):
         result = get_attachments(fixture_path("multi_attachment.eml"), investigation=False)
         assert len(result["Attachments"]["Data"]) == 3
+
+    def test_multiple_attachments_sequential_indexing(self):
+        """Keys for 3 attachments must be '1', '2', '3' in order."""
+        result = get_attachments(fixture_path("multi_attachment.eml"), investigation=False)
+        keys = list(result["Attachments"]["Data"].keys())
+        assert keys == ["1", "2", "3"]
 
     def test_returns_correct_structure(self):
         result = get_attachments(fixture_path("binary_attachment.eml"), investigation=False)
@@ -115,6 +132,24 @@ class TestAttachmentHashes:
 
         assert actual_md5 == expected_md5
 
+    def test_attachment_sha1_matches_direct_computation(self):
+        payload = get_raw_payload("binary_attachment.eml", "malware.pdf")
+        expected_sha1 = hashlib.sha1(payload).hexdigest()
+
+        result = get_attachments(fixture_path("binary_attachment.eml"), investigation=True)
+        actual_sha1 = result["Attachments"]["Investigation"]["malware.pdf"]["Virustotal"]["SHA1"].split("/")[-1]
+
+        assert actual_sha1 == expected_sha1
+
+    def test_image_attachment_sha256_matches_direct_computation(self):
+        payload = get_raw_payload("image_attachment.eml", "logo.png")
+        expected = hashlib.sha256(payload).hexdigest()
+
+        result = get_attachments(fixture_path("image_attachment.eml"), investigation=True)
+        actual = result["Attachments"]["Investigation"]["logo.png"]["Virustotal"]["SHA256"].split("/")[-1]
+
+        assert actual == expected
+
     def test_attachment_hashes_are_deterministic(self):
         result1 = get_attachments(fixture_path("binary_attachment.eml"), investigation=True)
         result2 = get_attachments(fixture_path("binary_attachment.eml"), investigation=True)
@@ -154,6 +189,32 @@ class TestInvestigationMode:
     def test_investigation_disabled_returns_empty(self):
         result = get_attachments(fixture_path("binary_attachment.eml"), investigation=False)
         assert result["Attachments"]["Investigation"] == {}
+
+    def test_virustotal_hash_url_exact_format(self):
+        """VT URL must be virustotal.com/gui/search/{hash}."""
+        result = get_attachments(fixture_path("binary_attachment.eml"), investigation=True)
+        sha256_url = result["Attachments"]["Investigation"]["malware.pdf"]["Virustotal"]["SHA256"]
+        sha256_val = sha256_url.split("/")[-1]
+
+        assert sha256_url == f"https://www.virustotal.com/gui/search/{sha256_val}"
+
+    def test_virustotal_name_search_url_exact_format(self):
+        """VT Name Search URL must be virustotal.com/gui/search/{filename}."""
+        result = get_attachments(fixture_path("binary_attachment.eml"), investigation=True)
+        name_url = result["Attachments"]["Investigation"]["malware.pdf"]["Virustotal"]["Name Search"]
+
+        assert name_url == "https://www.virustotal.com/gui/search/malware.pdf"
+
+    def test_image_attachment_investigation_links(self):
+        """Image attachments must produce the same investigation structure as binary."""
+        result = get_attachments(fixture_path("image_attachment.eml"), investigation=True)
+        inv = result["Attachments"]["Investigation"]["logo.png"]["Virustotal"]
+
+        assert "Name Search" in inv
+        assert "MD5"    in inv
+        assert "SHA1"   in inv
+        assert "SHA256" in inv
+        assert "logo.png" in inv["Name Search"]
 
     def test_investigation_generates_name_search_link(self):
         result = get_attachments(fixture_path("binary_attachment.eml"), investigation=True)

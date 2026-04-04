@@ -4,10 +4,11 @@ Tests for get_digests()
 Covers:
 - All 6 hashes computed (File MD5/SHA1/SHA256, Content MD5/SHA1/SHA256)
 - Hash values are valid lowercase hex strings of correct length
-- File hash matches independently computed hash
-- Content hash matches independently computed hash
-- File hash and content hash differ from each other
+- File MD5/SHA1/SHA256 each match independently computed hash
+- Content MD5/SHA1/SHA256 each match independently computed hash
+- File hash and content hash are independent code paths
 - Two different files produce different hashes
+- Hashes verified on multiple fixture files (not just basic.eml)
 - Investigation mode generates VirusTotal links for all hashes
 - Investigation links contain the actual hash value
 - Investigation disabled returns empty investigation
@@ -107,6 +108,46 @@ class TestDigestExtraction:
 
         expected = hashlib.md5(mail_data.encode("utf-8")).hexdigest()
         assert result["Digests"]["Data"]["Content MD5"] == expected
+
+    def test_file_sha1_matches_direct_hash(self):
+        path = fixture_path("basic.eml")
+        mail_data = load_fixture("basic.eml")
+        result = get_digests(mail_data, path, investigation=False)
+
+        with open(path, "rb") as f:
+            expected = hashlib.sha1(f.read()).hexdigest()
+
+        assert result["Digests"]["Data"]["File SHA1"] == expected
+
+    def test_content_sha1_matches_direct_hash(self):
+        path = fixture_path("basic.eml")
+        mail_data = load_fixture("basic.eml")
+        result = get_digests(mail_data, path, investigation=False)
+
+        expected = hashlib.sha1(mail_data.encode("utf-8")).hexdigest()
+        assert result["Digests"]["Data"]["Content SHA1"] == expected
+
+    def test_all_six_hashes_present_on_different_fixture(self):
+        """Six hashes must be produced for any valid .eml, not just basic.eml."""
+        path = fixture_path("spoofed.eml")
+        mail_data = load_fixture("spoofed.eml")
+        result = get_digests(mail_data, path, investigation=False)
+        data = result["Digests"]["Data"]
+
+        for key in ["File MD5", "File SHA1", "File SHA256",
+                    "Content MD5", "Content SHA1", "Content SHA256"]:
+            assert key in data
+
+    def test_hashes_correct_on_different_fixture(self):
+        """File SHA256 must match direct computation for a second fixture."""
+        path = fixture_path("spoofed.eml")
+        mail_data = load_fixture("spoofed.eml")
+        result = get_digests(mail_data, path, investigation=False)
+
+        with open(path, "rb") as f:
+            expected = hashlib.sha256(f.read()).hexdigest()
+
+        assert result["Digests"]["Data"]["File SHA256"] == expected
 
     def test_file_hash_and_content_hash_are_independent_computations(self):
         """File and content hashes are computed via different code paths.

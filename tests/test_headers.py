@@ -6,7 +6,10 @@ Covers:
 - Header key normalization (lowercase)
 - Tab/newline stripping from values
 - Multiple Received headers joined
+- Minimal email (only mandatory headers, no optional fields)
 - Investigation mode (X-Sender-IP links)
+- Investigation mode: exact VT and AbuseIPDB URL format
+- Investigation mode: only relevant keys produced
 - Spoof detection: spoofed email
 - Spoof detection: not spoofed email
 - Spoof detection: From with display name + angle bracket email
@@ -158,6 +161,69 @@ class TestSpoofDetection:
         result = get_headers(mail_data, investigation=False)
         # investigation=False — spoof check section should not exist
         assert "Spoof Check" not in result["Headers"]["Investigation"]
+
+
+class TestMinimalEmail:
+    def test_minimal_email_has_correct_structure(self):
+        """Email with only From/To/Subject must still return valid structure."""
+        mail_data = load_fixture("minimal.eml")
+        result = get_headers(mail_data, investigation=False)
+
+        assert "Headers" in result
+        assert "Data" in result["Headers"]
+        assert result["Headers"]["Data"]["from"] == "sender@example.com"
+        assert result["Headers"]["Data"]["to"] == "recipient@example.com"
+        assert result["Headers"]["Data"]["subject"] == "Minimal Email"
+
+    def test_minimal_email_investigation_is_empty(self):
+        """No X-Sender-IP and no Reply-To → investigation section stays empty."""
+        mail_data = load_fixture("minimal.eml")
+        result = get_headers(mail_data, investigation=True)
+        assert result["Headers"]["Investigation"] == {}
+
+    def test_minimal_email_missing_optional_headers(self):
+        """Optional headers like mime-version, content-type must not appear."""
+        mail_data = load_fixture("minimal.eml")
+        result = get_headers(mail_data, investigation=False)
+        data = result["Headers"]["Data"]
+
+        assert "mime-version" not in data
+        assert "content-type" not in data
+        assert "x-sender-ip" not in data
+
+
+class TestInvestigationUrlFormats:
+    def test_virustotal_url_uses_gui_search_format(self):
+        """VT URL must follow the /gui/search/{ip} pattern."""
+        mail_data = load_fixture("basic.eml")
+        result = get_headers(mail_data, investigation=True)
+        vt_url = result["Headers"]["Investigation"]["X-Sender-Ip"]["Virustotal"]
+
+        assert vt_url == "https://www.virustotal.com/gui/search/192.168.1.100"
+
+    def test_abuseipdb_url_uses_check_format(self):
+        """AbuseIPDB URL must follow the /check/{ip} pattern."""
+        mail_data = load_fixture("basic.eml")
+        result = get_headers(mail_data, investigation=True)
+        abuse_url = result["Headers"]["Investigation"]["X-Sender-Ip"]["Abuseipdb"]
+
+        assert abuse_url == "https://www.abuseipdb.com/check/192.168.1.100"
+
+    def test_investigation_only_contains_relevant_keys(self):
+        """Investigation must not produce keys for headers that don't exist."""
+        mail_data = load_fixture("spoofed.eml")  # no X-Sender-IP
+        result = get_headers(mail_data, investigation=True)
+        inv = result["Headers"]["Investigation"]
+
+        assert "X-Sender-Ip" not in inv
+        # Only Spoof Check should be present (has Reply-To and From)
+        assert set(inv.keys()) == {"Spoof Check"}
+
+    def test_investigation_with_no_investigatable_headers_is_empty(self):
+        """No X-Sender-IP and no Reply-To → investigation must be empty dict."""
+        mail_data = load_fixture("minimal.eml")
+        result = get_headers(mail_data, investigation=True)
+        assert result["Headers"]["Investigation"] == {}
 
 
 class TestRegressionBug26:
