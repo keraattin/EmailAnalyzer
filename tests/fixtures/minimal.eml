@@ -1,0 +1,5 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Minimal Email
+
+This is a minimal email with no optional headers.

@@ -1,0 +1,15 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Basic Test Email
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+X-Sender-IP: 192.168.1.100
+Content-Type: text/html; charset="utf-8"
+
+<!DOCTYPE html>
+<html>
+<body>
+<p>Hello! Please click: <a href="https://example.com/page">Visit us</a></p>
+<p>Also see: <a href="https://another-site.com/path?q=1">Another link</a></p>
+</body>
+</html>

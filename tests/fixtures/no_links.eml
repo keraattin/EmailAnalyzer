@@ -1,0 +1,9 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: No Links Email
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+This email contains no hyperlinks at all.
+Just plain text content.
