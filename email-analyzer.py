@@ -400,7 +400,7 @@ if __name__ == '__main__':
             print(f"{file_format} file format not supported")
             sys.exit(-1) #Exit with error code
     
-    with open(filename,"r",encoding="utf-8") as file:
+    with open(filename,"r",encoding="utf-8",errors="replace") as file:
         data = file.read().rstrip()
 
     # Create JSON data
