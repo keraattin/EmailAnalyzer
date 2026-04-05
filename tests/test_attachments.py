@@ -238,6 +238,53 @@ class TestInvestigationMode:
         assert result["Attachments"]["Investigation"] == {}
 
 
+class TestRegressionBug29:
+    """Regression tests for Bug #29 — None filename used as dict key causing TypeError."""
+
+    def test_none_filename_does_not_crash(self):
+        """Previously: None stored as filename, then used as dict key → TypeError."""
+        result = get_attachments(fixture_path("no_filename_attachment.eml"), investigation=False)
+        assert result is not None
+
+    def test_none_filename_replaced_with_fallback(self):
+        """Attachment with no Content-Disposition filename must get a fallback name."""
+        result = get_attachments(fixture_path("no_filename_attachment.eml"), investigation=False)
+        data = result["Attachments"]["Data"]
+
+        assert len(data) == 1
+        assert data["1"] is not None
+        assert "unnamed_attachment" in data["1"]
+
+    def test_none_filename_fallback_is_string(self):
+        """Fallback filename must be a non-empty string."""
+        result = get_attachments(fixture_path("no_filename_attachment.eml"), investigation=False)
+        filename = result["Attachments"]["Data"]["1"]
+
+        assert isinstance(filename, str)
+        assert len(filename) > 0
+
+    def test_none_filename_investigation_uses_fallback_as_key(self):
+        """Investigation dict must use the fallback name as key, not None."""
+        result = get_attachments(fixture_path("no_filename_attachment.eml"), investigation=True)
+        inv = result["Attachments"]["Investigation"]
+
+        assert None not in inv
+        assert len(inv) == 1
+        key = list(inv.keys())[0]
+        assert "unnamed_attachment" in key
+
+    def test_none_filename_hashes_still_computed(self):
+        """Even with a fallback filename, hashes must be computed correctly."""
+        result = get_attachments(fixture_path("no_filename_attachment.eml"), investigation=True)
+        inv = result["Attachments"]["Investigation"]
+        key = list(inv.keys())[0]
+        vt = inv[key]["Virustotal"]
+
+        assert len(vt["MD5"].split("/")[-1])    == 32
+        assert len(vt["SHA1"].split("/")[-1])   == 40
+        assert len(vt["SHA256"].split("/")[-1]) == 64
+
+
 class TestRegressionBug28:
     """Regression tests for Bug #28 — TypeError when get_payload(decode=True) returns None."""
 
