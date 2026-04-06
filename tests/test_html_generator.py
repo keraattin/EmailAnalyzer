@@ -334,3 +334,73 @@ class TestRegressionBug32:
         html = generate_headers_section(data)
         assert "user@example.com" in html
         assert "&amp;" not in html or "user" in html  # no spurious encoding
+
+
+# ---------------------------------------------------------------------------
+# Regression #33 — duplicate navbarDropdown IDs
+# ---------------------------------------------------------------------------
+
+class TestRegressionBug33:
+    """Regression tests for Bug #33 — four dropdowns sharing id='navbarDropdown'."""
+
+    def test_navbardropdown_id_not_duplicated(self):
+        """The generic id='navbarDropdown' must not appear in the generated HTML."""
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'id="navbarDropdown"' not in html
+
+    def test_headers_dropdown_has_unique_id(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'id="headersDropdown"' in html
+
+    def test_links_dropdown_has_unique_id(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'id="linksDropdown"' in html
+
+    def test_attachments_dropdown_has_unique_id(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'id="attachmentsDropdown"' in html
+
+    def test_digests_dropdown_has_unique_id(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'id="digestsDropdown"' in html
+
+    def test_all_four_dropdown_ids_are_distinct(self):
+        """Each dropdown must have a unique ID — no two dropdowns share the same id."""
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        ids = ["headersDropdown", "linksDropdown", "attachmentsDropdown", "digestsDropdown"]
+        assert len(ids) == len(set(ids))  # sanity
+        for id_ in ids:
+            assert html.count(f'id="{id_}"') == 1, f'{id_} appears more than once'
+
+    def test_aria_labelledby_matches_id_for_headers(self):
+        """aria-labelledby must reference the same unique ID as the toggle button."""
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'aria-labelledby="headersDropdown"' in html
+
+    def test_aria_labelledby_matches_id_for_links(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'aria-labelledby="linksDropdown"' in html
+
+    def test_aria_labelledby_matches_id_for_attachments(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'aria-labelledby="attachmentsDropdown"' in html
+
+    def test_aria_labelledby_matches_id_for_digests(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'aria-labelledby="digestsDropdown"' in html
+
+    def test_aria_labelledby_navbardropdown_not_present(self):
+        """The old mismatched aria-labelledby='navbarDropdown' must be gone."""
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'aria-labelledby="navbarDropdown"' not in html
