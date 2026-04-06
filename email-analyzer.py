@@ -94,13 +94,11 @@ def get_headers(mail_data : str, investigation):
 
     return data
 
-def get_digests(mail_data : str, filename : str, investigation):
+def get_digests(mail_data : str, file_bytes : bytes, investigation):
     '''Get Hash value of mail'''
-    with open(filename, 'rb') as f:
-        eml_file    = f.read()
-        file_md5    = hashlib.md5(eml_file).hexdigest()
-        file_sha1   = hashlib.sha1(eml_file).hexdigest()
-        file_sha256 = hashlib.sha256(eml_file).hexdigest()
+    file_md5    = hashlib.md5(file_bytes).hexdigest()
+    file_sha1   = hashlib.sha1(file_bytes).hexdigest()
+    file_sha256 = hashlib.sha256(file_bytes).hexdigest()
 
     content_md5     = hashlib.md5(mail_data.encode("utf-8")).hexdigest()
     content_sha1    = hashlib.sha1(mail_data.encode("utf-8")).hexdigest()
@@ -400,8 +398,9 @@ if __name__ == '__main__':
             print(f"{file_format} file format not supported")
             sys.exit(-1) #Exit with error code
     
-    with open(filename,"r",encoding="utf-8",errors="replace") as file:
-        data = file.read().rstrip()
+    with open(filename,"rb") as file:
+        file_bytes = file.read()
+    data = file_bytes.decode("utf-8", errors="replace").rstrip()
 
     # Create JSON data
     app_data = json.loads('{"Information": {}, "Analysis":{}}')
@@ -429,7 +428,7 @@ if __name__ == '__main__':
         # Digests
         if args.digests:
             # Get Digests
-            digests = get_digests(data, filename, args.investigate)
+            digests = get_digests(data, file_bytes, args.investigate)
             app_data["Analysis"].update(digests)
 
         # Links
@@ -462,7 +461,7 @@ if __name__ == '__main__':
         app_data["Analysis"].update(headers)
 
         # Get Digests
-        digests = get_digests(data, filename, investigate)
+        digests = get_digests(data, file_bytes, investigate)
         app_data["Analysis"].update(digests)
 
         # Get & Print Links

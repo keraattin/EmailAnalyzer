@@ -28,6 +28,11 @@ def load_fixture(name: str) -> str:
     return (FIXTURES_DIR / name).read_text(encoding="utf-8")
 
 
+def load_fixture_bytes(name: str) -> bytes:
+    """Read a fixture .eml file and return its raw bytes (mirrors the fixed main block)."""
+    return (FIXTURES_DIR / name).read_bytes()
+
+
 def fixture_path(name: str) -> str:
     """Return the absolute path string of a fixture file."""
     return str(FIXTURES_DIR / name)

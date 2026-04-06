@@ -15,7 +15,7 @@ import pytest
 from pathlib import Path
 from conftest import (
     get_headers, get_links, get_digests,
-    load_fixture, fixture_path, FIXTURES_DIR
+    load_fixture, load_fixture_bytes, fixture_path, FIXTURES_DIR
 )
 
 
@@ -78,9 +78,9 @@ class TestRegressionBug30:
 
     def test_latin1_email_digests_computable(self):
         """get_digests() must still compute hashes on a Latin-1 email."""
-        path = fixture_path("latin1_encoded.eml")
+        file_bytes = load_fixture_bytes("latin1_encoded.eml")
         mail_data = load_fixture_replace("latin1_encoded.eml")
-        result = get_digests(mail_data, path, investigation=False)
+        result = get_digests(mail_data, file_bytes, investigation=False)
 
         assert len(result["Digests"]["Data"]["File SHA256"]) == 64
         assert len(result["Digests"]["Data"]["Content SHA256"]) == 64
