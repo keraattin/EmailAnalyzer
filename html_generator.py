@@ -272,37 +272,37 @@ def generate_table_from_json(json_obj):
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav mr-auto">
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="headersDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Headers
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <div class="dropdown-menu" aria-labelledby="headersDropdown">
                     <a class="dropdown-item" href="#headers-data-section">Data <span class="badge badge-pill badge-dark">{ headers_cnt }</span></a>
                     <a class="dropdown-item" href="#headers-investigation-section">Investigation <span class="badge badge-pill badge-dark">{ headers_inv_cnt }</span></a>
                     </div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="linksDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Links
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <div class="dropdown-menu" aria-labelledby="linksDropdown">
                     <a class="dropdown-item" href="#links-data-section">Data <span class="badge badge-pill badge-dark">{ links_cnt }</span></a>
                     <a class="dropdown-item" href="#links-investigation-section">Investigation <span class="badge badge-pill badge-dark">{ links_inv_cnt }</span></a>
                     </div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="attachmentsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Attachments
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <div class="dropdown-menu" aria-labelledby="attachmentsDropdown">
                     <a class="dropdown-item" href="#attachments-data-section">Data <span class="badge badge-pill badge-dark">{ attach_cnt }</span></a>
                     <a class="dropdown-item" href="#attachments-investigation-section">Investigation <span class="badge badge-pill badge-dark">{ attach_inv_cnt }</span></a>
                     </div>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="digestsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Digests
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <div class="dropdown-menu" aria-labelledby="digestsDropdown">
                     <a class="dropdown-item" href="#digests-data-section">Data <span class="badge badge-pill badge-dark">{ digest_cnt }</span></a>
                     <a class="dropdown-item" href="#digests-investigation-section">Investigation <span class="badge badge-pill badge-dark">{ digest_inv_cnt }</span></a>
                     </div>
