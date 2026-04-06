@@ -19,7 +19,7 @@ def generate_headers_section(headers):
     """
     for key,value in headers["Data"].items():
         # Populate table rows
-        html += f"<tr><td>{ str(key) }</td><td>{ escape(str(value)) }</td></tr>"
+        html += f"<tr><td>{ escape(str(key)) }</td><td>{ escape(str(value)) }</td></tr>"
         
     html += """
         </tbody>
@@ -39,9 +39,9 @@ def generate_headers_section(headers):
         <div class="col-md-4">
             <div class="jumbotron">
                 <h3>{}</h3><hr>
-        """.format(index)
+        """.format(escape(str(index)))
         for k,v in values.items():
-            html += f"<br><b>{k}:<br></b>{v}"
+            html += f"<br><b>{escape(str(k))}:<br></b>{escape(str(v))}"
         
         html += """
             </div>
@@ -71,7 +71,7 @@ def generate_links_section(links):
     for key,value in links["Data"].items():
         # Populate table rows
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(key,value)
+        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
         html += "</tr>"
         
     html += """
@@ -95,9 +95,9 @@ def generate_links_section(links):
     for index,values in links["Investigation"].items():
         # Populate table rows
         html += "<tr>"
-        html += "<td>{}</td><td>".format(index)
+        html += "<td>{}</td><td>".format(escape(str(index)))
         for k,v in values.items():
-            html += f"<b><a href='{v}' target='_blank'>{k} Scan</a></b>&nbsp;&nbsp;"
+            html += f"<b><a href='{escape(v)}' target='_blank'>{escape(k)} Scan</a></b>&nbsp;&nbsp;"
         html += "</td></tr>"
         
     html += """
@@ -127,7 +127,7 @@ def generate_attachment_section(attachments):
     for key,value in attachments["Data"].items():
         # Populate table rows
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(key,value)
+        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
         html += "</tr>"
         
     html += """
@@ -151,10 +151,10 @@ def generate_attachment_section(attachments):
     for index,values in attachments["Investigation"].items():
         # Populate table rows
         html += "<tr>"
-        html += "<td>{}</td><td>".format(index)
+        html += "<td>{}</td><td>".format(escape(str(index)))
         for k,v in values.items():
             for x,y in v.items():
-                html += f"<b><a href='{y}' target='_blank'>{x} Scan({k})</a></b><br>"
+                html += f"<b><a href='{escape(y)}' target='_blank'>{escape(x)} Scan({escape(k)})</a></b><br>"
         html += "</td></tr>"
         
     html += """
@@ -184,7 +184,7 @@ def generate_digest_section(digests):
     for key,value in digests["Data"].items():
         # Populate table rows
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(key,value)
+        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
         html += "</tr>"
         
     html += """
@@ -208,9 +208,9 @@ def generate_digest_section(digests):
     for index,values in digests["Investigation"].items():
         # Populate table rows
         html += "<tr>"
-        html += "<td>{}</td><td>".format(index)
+        html += "<td>{}</td><td>".format(escape(str(index)))
         for k,v in values.items():
-            html += f"<b><a href='{v}' target='_blank'>{k} scan</a></b><br>"
+            html += f"<b><a href='{escape(v)}' target='_blank'>{escape(k)} scan</a></b><br>"
         html += "</td></tr>"
         
     html += """
@@ -354,11 +354,11 @@ def generate_table_from_json(json_obj):
                     <tbody>
                         <tr>
                             <td>Name</td>
-                            <td>{ info_data["Scan"]["Filename"] }</td>
+                            <td>{ escape(info_data["Scan"]["Filename"]) }</td>
                         </tr>
                         <tr>
                             <td>Generated</td>
-                            <td>{ info_data["Scan"]["Generated"] }</td>
+                            <td>{ escape(info_data["Scan"]["Generated"]) }</td>
                         </tr>
                     </tbody>
                 </table>
