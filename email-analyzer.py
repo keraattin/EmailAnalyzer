@@ -4,6 +4,7 @@
 ##############################################################################
 from email.parser import HeaderParser
 from email import message_from_binary_file,policy
+from email.header import decode_header,make_header
 from argparse import ArgumentParser
 import sys
 import hashlib
@@ -48,11 +49,13 @@ def get_headers(mail_data : str, investigation):
     data = json.loads('{"Headers":{"Data":{},"Investigation":{}}}')
     # Put Header data to JSON
     for k,v in headers.items():
-        data["Headers"]["Data"][k.lower()] = v.replace('\t', '').replace('\n', '')
+        decoded = str(make_header(decode_header(v)))
+        data["Headers"]["Data"][k.lower()] = decoded.replace('\t', '').replace('\n', '')
     
     # To get all 'Received' headers
     if data["Headers"]["Data"].get('received'):
-        data["Headers"]["Data"]["received"] = ' '.join(headers.get_all('Received')).replace('\t', '').replace('\n', '')
+        received_all = ' '.join(headers.get_all('Received'))
+        data["Headers"]["Data"]["received"] = str(make_header(decode_header(received_all))).replace('\t', '').replace('\n', '')
 
     # If investigation requested
     if investigation:
