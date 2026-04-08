@@ -12,6 +12,7 @@ import re
 import quopri
 import os
 import json
+import ipaddress
 from datetime import datetime
 from banners import (
     get_introduction_banner,get_headers_banner,get_links_banner,
@@ -31,6 +32,7 @@ SUPPORTED_OUTPUT_TYPES = ["json","html"]
 # REGEX
 LINK_REGEX = r'href=\"((?:\S)*)\"'
 MAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+IP_REGEX   = r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b'
 
 # Date Format
 DATE_FORMAT = "%B %d, %Y - %H:%M:%S"
@@ -41,6 +43,14 @@ TER_COL_SIZE = 60
 
 # Functions
 ##############################################################################
+def _is_public_ip(ip_str):
+    '''Return True if the IP is a valid, globally routable address'''
+    try:
+        ip = ipaddress.ip_address(ip_str)
+        return ip.is_global and not ip.is_multicast
+    except ValueError:
+        return False
+
 def get_headers(mail_data : str, investigation):
     '''Get Headers from mail data'''
     # Get Headers from mail data
@@ -66,6 +76,21 @@ def get_headers(mail_data : str, investigation):
                 "Abuseipdb":f'https://www.abuseipdb.com/check/{data["Headers"]["Data"]["x-sender-ip"]}'
             }
         
+        # Received Header IP Investigation
+        if data["Headers"]["Data"].get("received"):
+            received_ips = dict.fromkeys(
+                ip for ip in re.findall(IP_REGEX, data["Headers"]["Data"]["received"])
+                if _is_public_ip(ip)
+            )
+            if received_ips:
+                data["Headers"]["Investigation"]["Received IPs"] = {
+                    ip: {
+                        "Virustotal": f"https://www.virustotal.com/gui/search/{ip}",
+                        "Abuseipdb":  f"https://www.abuseipdb.com/check/{ip}"
+                    }
+                    for ip in received_ips
+                }
+
         # Reply To - From Investigation (Spoof Check)
         if data["Headers"]["Data"].get("reply-to") and data["Headers"]["Data"].get("from"):
             # Get Reply-To Address
