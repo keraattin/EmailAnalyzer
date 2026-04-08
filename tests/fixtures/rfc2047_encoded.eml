@@ -1,0 +1,8 @@
+From: =?UTF-8?B?SGVsbG8gV29ybGQ=?= <sender@example.com>
+To: recipient@example.com
+Subject: =?UTF-8?B?SGVsbG8gV29ybGQ=?=
+Date: Wed, 08 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+Test email with RFC 2047 encoded headers.
