@@ -1,0 +1,11 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Auth Softfail SPF
+Date: Wed, 08 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Authentication-Results: mx.example.com;
+    spf=softfail smtp.mailfrom=sender@example.com;
+    dkim=pass header.d=example.com
+Content-Type: text/plain
+
+Email with SPF softfail result.

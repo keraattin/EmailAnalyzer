@@ -17,10 +17,11 @@ spec = importlib.util.spec_from_file_location(
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 
-get_headers     = mod.get_headers
-get_links       = mod.get_links
-get_digests     = mod.get_digests
-get_attachments = mod.get_attachments
+get_headers      = mod.get_headers
+get_links        = mod.get_links
+get_digests      = mod.get_digests
+get_attachments  = mod.get_attachments
+get_auth_results = mod.get_auth_results
 
 
 def load_fixture(name: str) -> str:
