@@ -1,0 +1,12 @@
+From: attacker@evil.com
+To: recipient@example.com
+Subject: Auth Fail SPF DKIM
+Date: Wed, 08 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Authentication-Results: mx.example.com;
+    spf=fail smtp.mailfrom=attacker@evil.com;
+    dkim=fail header.d=evil.com;
+    dmarc=fail
+Content-Type: text/plain
+
+Email with failing authentication checks.

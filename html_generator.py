@@ -165,6 +165,31 @@ def generate_attachment_section(attachments):
     return html
     ######################################################################
 
+def generate_auth_section(authentication):
+    html = """
+        <h2 id="authentication-section" style="text-align: center;"><i class="fa-solid fa-shield-halved"></i> Authentication</h2>
+        <hr>
+        <h3 id="authentication-data-section"><i class="fa-solid fa-chart-column"></i> Data</h3>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Protocol</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+        <tbody>
+    """
+    STATUS_CLASSES = {"pass": "success", "fail": "danger", "softfail": "warning"}
+    for key, value in authentication["Data"].items():
+        badge_class = STATUS_CLASSES.get(value, "secondary")
+        html += f"<tr><td>{escape(str(key))}</td><td><span class='badge badge-{badge_class}'>{escape(str(value))}</span></td></tr>"
+
+    html += """
+        </tbody>
+    </table>
+    <hr>"""
+    return html
+
 def generate_digest_section(digests):
     # Data
     ######################################################################
@@ -255,6 +280,11 @@ def generate_table_from_json(json_obj):
         digest_cnt = 0
         digest_inv_cnt = 0
 
+    if data.get("Authentication"):
+        auth_cnt = len(data["Authentication"]["Data"])
+    else:
+        auth_cnt = 0
+
     # Generate HTML table with Bootstrap classes
     html = f"""
         <head>
@@ -278,6 +308,14 @@ def generate_table_from_json(json_obj):
                     <div class="dropdown-menu" aria-labelledby="headersDropdown">
                     <a class="dropdown-item" href="#headers-data-section">Data <span class="badge badge-pill badge-dark">{ headers_cnt }</span></a>
                     <a class="dropdown-item" href="#headers-investigation-section">Investigation <span class="badge badge-pill badge-dark">{ headers_inv_cnt }</span></a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="authenticationDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Authentication
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="authenticationDropdown">
+                    <a class="dropdown-item" href="#authentication-data-section">Data <span class="badge badge-pill badge-dark">{ auth_cnt }</span></a>
                     </div>
                 </li>
                 <li class="nav-item dropdown">
@@ -368,7 +406,10 @@ def generate_table_from_json(json_obj):
 
     if data.get("Headers"):
         html += generate_headers_section(data["Headers"])
-    
+
+    if data.get("Authentication"):
+        html += generate_auth_section(data["Authentication"])
+
     if data.get("Links"):
         html += generate_links_section(data["Links"])
 

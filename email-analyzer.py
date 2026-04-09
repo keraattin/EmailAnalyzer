@@ -16,7 +16,8 @@ import ipaddress
 from datetime import datetime
 from banners import (
     get_introduction_banner,get_headers_banner,get_links_banner,
-    get_digests_banner,get_attachment_banner,get_investigation_banner
+    get_digests_banner,get_attachment_banner,get_investigation_banner,
+    get_auth_banner
 )
 from html_generator import generate_table_from_json
 ##############################################################################
@@ -33,6 +34,8 @@ SUPPORTED_OUTPUT_TYPES = ["json","html"]
 LINK_REGEX = r'href=\"((?:\S)*)\"'
 MAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
 IP_REGEX   = r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b'
+AUTH_REGEX = r'\b(spf|dkim|dmarc)=(pass|fail|softfail|neutral|none|temperror|permerror)\b'
+SPF_REGEX  = r'\b(pass|fail|softfail|neutral|none|temperror|permerror)\b'
 
 # Date Format
 DATE_FORMAT = "%B %d, %Y - %H:%M:%S"
@@ -119,6 +122,28 @@ def get_headers(mail_data : str, investigation):
                     "From": mailfrom,
                     "Conclusion": conclusion
                 }
+
+    return data
+
+def get_auth_results(mail_data : str):
+    '''Parse SPF, DKIM, DMARC authentication results from email headers'''
+    headers = HeaderParser().parsestr(mail_data, headersonly=True)
+
+    # Create JSON data
+    data = json.loads('{"Authentication":{"Data":{}}}')
+
+    # Parse Authentication-Results header(s)
+    auth_headers = headers.get_all('Authentication-Results') or []
+    combined = ' '.join(auth_headers).lower()
+    for protocol, result in re.findall(AUTH_REGEX, combined):
+        data["Authentication"]["Data"][protocol.upper()] = result
+
+    # Fall back to Received-SPF for SPF if not found in Authentication-Results
+    if "SPF" not in data["Authentication"]["Data"]:
+        received_spf = headers.get('Received-SPF') or ''
+        spf_match = re.search(SPF_REGEX, received_spf.lower())
+        if spf_match:
+            data["Authentication"]["Data"]["SPF"] = spf_match.group(1)
 
     return data
 
@@ -266,6 +291,17 @@ def print_data(data):
                     print(f"{k}:\n{v}\n")
                 print("_"*TER_COL_SIZE)
     
+    # Print Authentication
+    if data["Analysis"].get("Authentication"):
+        # Print Banner
+        get_auth_banner()
+
+        for key,val in data["Analysis"]["Authentication"]["Data"].items():
+            print("_"*TER_COL_SIZE)
+            print(f"[{key}]")
+            print(val)
+            print("_"*TER_COL_SIZE)
+
     # Print Digests
     if data["Analysis"].get("Digests"):
         # Print Banner
@@ -394,6 +430,13 @@ if __name__ == '__main__':
         action="store_true"
     )
     parser.add_argument(
+        "-A",
+        "--authentication",
+        help="To get the Authentication Results of the Email (SPF, DKIM, DMARC)",
+        required=False,
+        action="store_true"
+    )
+    parser.add_argument(
         "-i",
         "--investigate",
         help="Activate if you want an investigation",
@@ -443,7 +486,7 @@ if __name__ == '__main__':
     }
     
     # List of Arguments
-    arg_list = [args.headers, args.digests, args.links, args.attachments]
+    arg_list = [args.headers, args.digests, args.links, args.attachments, args.authentication]
 
     # Check if any argument given
     if any(arg_list):
@@ -452,6 +495,11 @@ if __name__ == '__main__':
             # Get Headers
             headers = get_headers(data, args.investigate)
             app_data["Analysis"].update(headers)
+
+        # Authentication
+        if args.authentication:
+            authentication = get_auth_results(data)
+            app_data["Analysis"].update(authentication)
 
         # Digests
         if args.digests:
@@ -464,10 +512,10 @@ if __name__ == '__main__':
             # Get & Print Links
             links = get_links(data, args.investigate)
             app_data["Analysis"].update(links)
-        
+
         # Attachments
         if args.attachments:
-            # Get Attachments 
+            # Get Attachments
             attachments = get_attachments(filename, args.investigate)
             app_data["Analysis"].update(attachments)
         
@@ -488,6 +536,10 @@ if __name__ == '__main__':
         headers = get_headers(data, investigate)
         app_data["Analysis"].update(headers)
 
+        # Get Authentication Results
+        authentication = get_auth_results(data)
+        app_data["Analysis"].update(authentication)
+
         # Get Digests
         digests = get_digests(data, file_bytes, investigate)
         app_data["Analysis"].update(digests)
@@ -495,8 +547,8 @@ if __name__ == '__main__':
         # Get & Print Links
         links = get_links(data, investigate)
         app_data["Analysis"].update(links)
-        
-        # Get Attachments 
+
+        # Get Attachments
         attachments = get_attachments(filename, investigate)
         app_data["Analysis"].update(attachments)
 
