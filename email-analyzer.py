@@ -386,10 +386,16 @@ def print_data(data):
             for key,val in data["Analysis"]["Attachments"]["Investigation"].items():
                 print("_"*TER_COL_SIZE)
                 print(f"- {key}\n")
-                for k,v in val.items():
-                    print(f"{k}:")
-                    for a,b in v.items():
-                        print(f"[{a}]->{b}")
+                if key == "Duplicate Warning":
+                    for sha,names in val.items():
+                        print(f"[{sha}]")
+                        for name in names:
+                            print(f"  {name}")
+                else:
+                    for k,v in val.items():
+                        print(f"{k}:")
+                        for a,b in v.items():
+                            print(f"[{a}]->{b}")
                 print("_"*TER_COL_SIZE)
 ##############################################################################
 

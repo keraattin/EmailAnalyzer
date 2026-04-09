@@ -5,16 +5,18 @@ With EmailAnalyzer you can able to analyze your suspicious emails. You can extra
 
 ## Usage
 ```
-usage: email-analyzer.py [-h] -f FILENAME [-H] [-d] [-l] [-a] [-i] [-o OUTPUT]
+usage: email-analyzer.py [-h] -f FILENAME [-H] [-d] [-l] [-a] [-A] [-D] [-i] [-o OUTPUT]
 
 options:
   -h, --help            show this help message and exit
-  -f FILENAME, --filename FILENAME
+  -f, --filename FILENAME
                         Name of the EML file
   -H, --headers         To get the Headers of the Email
   -d, --digests         To get the Digests of the Email
   -l, --links           To get the Links from the Email
   -a, --attachments     To get the Attachments from the Email
+  -A, --authentication  To get the Authentication Results of the Email (SPF, DKIM, DMARC)
+  -D, --defang          Defang URLs in Links output (hxxps://, [.] notation)
   -i, --investigate     Activate if you want an investigation
   -o OUTPUT, --output OUTPUT
                         Name of the Output file (Only HTML or JSON format supported)
@@ -94,6 +96,8 @@ _________________________________________________________
 _________________________________________________________
 ```
 
+> RFC 2047 encoded headers (e.g. `=?UTF-8?B?...?=`) are automatically decoded and displayed as readable text.
+
 ## To Investigate Headers
 ```
 python3 mail-analyzer.py -f <eml file> --headers --investigate
@@ -130,6 +134,41 @@ info@officialmail.com
 
 Conclusion:
 Reply Address and From Address is NOT Same. This mail may be SPOOFED.
+_________________________________________________________
+```
+
+> Investigation also extracts public IP addresses from `Received` headers and generates VirusTotal and AbuseIPDB lookup links for each one.
+
+## To get Authentication Results
+```
+python3 email-analyzer.py -f <eml file> --authentication
+```
+or
+```
+python3 email-analyzer.py -f <eml file> -A
+```
+
+Parses `Authentication-Results` and `Received-SPF` headers to extract SPF, DKIM, and DMARC verdicts.
+
+```
+ █████╗ ██╗   ██╗████████╗██╗  ██╗███████╗███╗   ██╗████████╗██╗ ██████╗ █████╗ ████████╗██╗ ██████╗ ███╗   ██╗
+██╔══██╗██║   ██║╚══██╔══╝██║  ██║██╔════╝████╗  ██║╚══██╔══╝██║██╔════╝██╔══██╗╚══██╔══╝██║██╔═══██╗████╗  ██║
+███████║██║   ██║   ██║   ███████║█████╗  ██╔██╗ ██║   ██║   ██║██║     ███████║   ██║   ██║██║   ██║██╔██╗ ██║
+██╔══██║██║   ██║   ██║   ██╔══██║██╔══╝  ██║╚██╗██║   ██║   ██║██║     ██╔══██║   ██║   ██║██║   ██║██║╚██╗██║
+██║  ██║╚██████╔╝   ██║   ██║  ██║███████╗██║ ╚████║   ██║   ██║╚██████╗██║  ██║   ██║   ██║╚██████╔╝██║ ╚████║
+╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝ ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+
+_________________________________________________________
+[SPF]
+pass
+_________________________________________________________
+_________________________________________________________
+[DKIM]
+pass
+_________________________________________________________
+_________________________________________________________
+[DMARC]
+pass
 _________________________________________________________
 ```
 
@@ -254,6 +293,21 @@ python3 email-analyzer.py -f <eml file> -l
 [2]->https://testlinks.com/campaing/123124
 ```
 
+## To get Defanged Links
+Add `-D` / `--defang` to convert URLs to defanged format (`hxxps://`, `[.]` for domain dots). Safe to share in reports without creating clickable links.
+```
+python3 email-analyzer.py -f <eml file> --links --defang
+```
+or
+```
+python3 email-analyzer.py -f <eml file> -lD
+```
+
+```
+[1]->hxxps://example[.]com
+[2]->hxxps://testlinks[.]com/campaing/123124
+```
+
 ## To Investigate Links
 ```
 python3 email-analyzer.py -f <eml file> --links --investigate
@@ -307,11 +361,13 @@ python3 email-analyzer.py -f <eml file> -a
 ██║  ██║   ██║      ██║   ██║  ██║╚██████╗██║  ██║███████║
 ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝
 
-[1]->example.pdf
+[1] example.pdf (application/pdf)
 _________________________________________________________
-[2]->malicious.pdf
+[2] malicious.pdf (application/octet-stream)
 _________________________________________________________
 ```
+
+> The MIME type is shown alongside the filename, allowing you to detect files whose extension does not match their actual content type (e.g. a `.pdf` with MIME type `application/octet-stream`).
 
 ## To Investigate Attachments
 ```
@@ -348,7 +404,16 @@ Virustotal:
 [SHA1]->https://www.virustotal.com/gui/search/8cb2237d0679ca88db6464eac60da96345513964
 [SHA256]->https://www.virustotal.com/gui/search/5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5
 _________________________________________________________
+_________________________________________________________
+- Duplicate Warning
+
+[03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4]
+  example.pdf
+  malicious.pdf
+_________________________________________________________
 ```
+
+> When two or more attachments share the same SHA256 hash, a **Duplicate Warning** is added to the investigation output listing the shared hash and the filenames involved.
 
 ## Testing
 
@@ -359,22 +424,24 @@ pip install pytest
 
 Run all tests from the project root:
 ```
-cd tests
-python3 -m pytest -v
+python3 -m pytest tests/ -v
 ```
 
 Run a specific test file:
 ```
-python3 -m pytest test_headers.py -v
-python3 -m pytest test_links.py -v
-python3 -m pytest test_digests.py -v
-python3 -m pytest test_attachments.py -v
+python3 -m pytest tests/test_headers.py -v
+python3 -m pytest tests/test_links.py -v
+python3 -m pytest tests/test_digests.py -v
+python3 -m pytest tests/test_attachments.py -v
+python3 -m pytest tests/test_auth_results.py -v
+python3 -m pytest tests/test_defang.py -v
+python3 -m pytest tests/test_duplicate_attachments.py -v
 ```
 
 ### Test Structure
 ```
 tests/
-├── fixtures/               # Sample .eml files used by tests
+├── fixtures/                        # Sample .eml files used by tests
 │   ├── basic.eml
 │   ├── spoofed.eml
 │   ├── not_spoofed.eml
@@ -383,10 +450,32 @@ tests/
 │   ├── no_links.eml
 │   ├── binary_attachment.eml
 │   ├── multi_attachment.eml
-│   └── no_attachment.eml
-├── conftest.py             # Shared fixtures and module loader
-├── test_headers.py         # Tests for get_headers()
-├── test_links.py           # Tests for get_links()
-├── test_digests.py         # Tests for get_digests()
-└── test_attachments.py     # Tests for get_attachments()
+│   ├── image_attachment.eml
+│   ├── no_attachment.eml
+│   ├── no_filename_attachment.eml
+│   ├── multipart_alternative.eml
+│   ├── duplicate_attachments.eml
+│   ├── rfc2047_encoded.eml
+│   ├── rfc2047_qp_encoded.eml
+│   ├── rfc2047_mixed.eml
+│   ├── received_public_ips.eml
+│   ├── received_mixed_ips.eml
+│   ├── auth_pass_all.eml
+│   ├── auth_fail_spf_dkim.eml
+│   ├── auth_softfail_spf.eml
+│   ├── auth_received_spf_only.eml
+│   └── auth_no_headers.eml
+├── conftest.py                      # Shared fixtures and module loader
+├── test_headers.py                  # Tests for get_headers()
+├── test_links.py                    # Tests for get_links()
+├── test_digests.py                  # Tests for get_digests()
+├── test_attachments.py              # Tests for get_attachments()
+├── test_attachment_mime.py          # Tests for MIME type in attachment output
+├── test_duplicate_attachments.py    # Tests for duplicate attachment detection
+├── test_rfc2047.py                  # Tests for RFC 2047 encoded header decoding
+├── test_received_ips.py             # Tests for Received header IP extraction
+├── test_auth_results.py             # Tests for SPF/DKIM/DMARC parsing
+├── test_defang.py                   # Tests for defanged URL output
+├── test_html_generator.py           # Tests for HTML report generation and XSS escaping
+└── test_encoding.py                 # Tests for non-UTF-8 email encoding handling
 ```
