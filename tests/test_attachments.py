@@ -44,11 +44,11 @@ class TestAttachmentExtraction:
         data = result["Attachments"]["Data"]
 
         assert len(data) == 1
-        assert data["1"] == "malware.pdf"
+        assert data["1"]["filename"] == "malware.pdf"
 
     def test_text_attachment_detected(self):
         result = get_attachments(fixture_path("multi_attachment.eml"), investigation=False)
-        names = list(result["Attachments"]["Data"].values())
+        names = [v["filename"] for v in result["Attachments"]["Data"].values()]
         assert "config.txt" in names
 
     def test_multiple_attachments_all_detected(self):
@@ -56,7 +56,7 @@ class TestAttachmentExtraction:
         data = result["Attachments"]["Data"]
 
         assert len(data) == 3
-        names = list(data.values())
+        names = [v["filename"] for v in data.values()]
         assert "document.pdf" in names
         assert "config.txt"   in names
         assert "payload.exe"  in names
@@ -67,7 +67,7 @@ class TestAttachmentExtraction:
         data = result["Attachments"]["Data"]
 
         assert len(data) == 1
-        assert data["1"] == "logo.png"
+        assert data["1"]["filename"] == "logo.png"
 
     def test_no_attachments_returns_empty(self):
         result = get_attachments(fixture_path("no_attachment.eml"), investigation=False)
@@ -252,13 +252,13 @@ class TestRegressionBug29:
         data = result["Attachments"]["Data"]
 
         assert len(data) == 1
-        assert data["1"] is not None
-        assert "unnamed_attachment" in data["1"]
+        assert data["1"]["filename"] is not None
+        assert "unnamed_attachment" in data["1"]["filename"]
 
     def test_none_filename_fallback_is_string(self):
         """Fallback filename must be a non-empty string."""
         result = get_attachments(fixture_path("no_filename_attachment.eml"), investigation=False)
-        filename = result["Attachments"]["Data"]["1"]
+        filename = result["Attachments"]["Data"]["1"]["filename"]
 
         assert isinstance(filename, str)
         assert len(filename) > 0
@@ -299,7 +299,7 @@ class TestRegressionBug28:
         data = result["Attachments"]["Data"]
 
         assert len(data) == 1
-        assert data["1"] == "real.pdf"
+        assert data["1"]["filename"] == "real.pdf"
 
     def test_none_payload_real_attachment_hashes_computed(self):
         """After skipping None payload, the real attachment must still be hashed correctly."""

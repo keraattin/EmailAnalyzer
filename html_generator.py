@@ -118,8 +118,9 @@ def generate_attachment_section(attachments):
         <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th>Key</th>
-                    <th>Value</th>
+                    <th>#</th>
+                    <th>Filename</th>
+                    <th>MIME Type</th>
                 </tr>
             </thead>
         <tbody>
@@ -127,7 +128,11 @@ def generate_attachment_section(attachments):
     for key,value in attachments["Data"].items():
         # Populate table rows
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
+        html += "<td>{}</td><td>{}</td><td>{}</td>".format(
+            escape(str(key)),
+            escape(str(value["filename"])),
+            escape(str(value["mime_type"]))
+        )
         html += "</tr>"
         
     html += """
