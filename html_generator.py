@@ -157,9 +157,14 @@ def generate_attachment_section(attachments):
         # Populate table rows
         html += "<tr>"
         html += "<td>{}</td><td>".format(escape(str(index)))
-        for k,v in values.items():
-            for x,y in v.items():
-                html += f"<b><a href='{escape(y)}' target='_blank'>{escape(x)} Scan({escape(k)})</a></b><br>"
+        if index == "Duplicate Warning":
+            for sha,names in values.items():
+                joined = ", ".join(escape(n) for n in names)
+                html += f"<b>{escape(sha)}</b>: {joined}<br>"
+        else:
+            for k,v in values.items():
+                for x,y in v.items():
+                    html += f"<b><a href='{escape(y)}' target='_blank'>{escape(x)} Scan({escape(k)})</a></b><br>"
         html += "</td></tr>"
         
     html += """
