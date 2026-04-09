@@ -190,7 +190,22 @@ def get_digests(mail_data : str, file_bytes : bytes, investigation):
         }
     return data
 
-def get_links(mail_data : str, investigation):
+def _defang_url(url):
+    '''Defang a URL for safe sharing in reports'''
+    url = url.replace("https://", "hxxps://")
+    url = url.replace("http://",  "hxxp://")
+    # Defang dots in the domain only (between :// and the next /)
+    if "://" in url:
+        scheme, rest = url.split("://", 1)
+        domain, _, path = rest.partition("/")
+        domain = domain.replace(".", "[.]")
+        url = f"{scheme}://{domain}/{path}" if path else f"{scheme}://{domain}"
+    else:
+        # No scheme — defang all dots
+        url = url.replace(".", "[.]")
+    return url
+
+def get_links(mail_data : str, investigation, defang=False):
     '''Get Links from mail data'''
 
     # If content of eml file is Encoded -> Decode
@@ -209,7 +224,7 @@ def get_links(mail_data : str, investigation):
     data = json.loads('{"Links":{"Data":{},"Investigation":{}}}')
 
     for index,link in enumerate(links,start=1):
-        data["Links"]["Data"][str(index)] = link
+        data["Links"]["Data"][str(index)] = _defang_url(link) if defang else link
     
     # If investigation requested
     if investigation:
@@ -441,6 +456,13 @@ if __name__ == '__main__':
         action="store_true"
     )
     parser.add_argument(
+        "-D",
+        "--defang",
+        help="Defang URLs in Links output (hxxps://, [.] notation)",
+        required=False,
+        action="store_true"
+    )
+    parser.add_argument(
         "-i",
         "--investigate",
         help="Activate if you want an investigation",
@@ -514,7 +536,7 @@ if __name__ == '__main__':
         # Links
         if args.links:
             # Get & Print Links
-            links = get_links(data, args.investigate)
+            links = get_links(data, args.investigate, defang=args.defang)
             app_data["Analysis"].update(links)
 
         # Attachments
@@ -549,7 +571,7 @@ if __name__ == '__main__':
         app_data["Analysis"].update(digests)
 
         # Get & Print Links
-        links = get_links(data, investigate)
+        links = get_links(data, investigate, defang=False)
         app_data["Analysis"].update(links)
 
         # Get Attachments
