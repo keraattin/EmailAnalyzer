@@ -279,6 +279,14 @@ def get_attachments(filename : str, investigation):
                 }
             }
 
+        # Detect duplicate attachments by SHA256
+        sha256_map = {}
+        for attachment in attachments:
+            sha256_map.setdefault(attachment["SHA256"], []).append(attachment["filename"])
+        duplicates = {sha: names for sha, names in sha256_map.items() if len(names) > 1}
+        if duplicates:
+            data["Attachments"]["Investigation"]["Duplicate Warning"] = duplicates
+
     return data
 ##############################################################################
 
