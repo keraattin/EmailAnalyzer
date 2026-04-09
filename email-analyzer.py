@@ -239,14 +239,18 @@ def get_attachments(filename : str, investigation):
         if payload is None:
             continue
         attached_file = {}
-        attached_file["filename"] = attachment.get_filename() or f"unnamed_attachment_{index}"
+        attached_file["filename"]  = attachment.get_filename() or f"unnamed_attachment_{index}"
+        attached_file["mime_type"] = attachment.get_content_type()
         attached_file["MD5"]    = hashlib.md5(payload).hexdigest()
         attached_file["SHA1"]   = hashlib.sha1(payload).hexdigest()
         attached_file["SHA256"] = hashlib.sha256(payload).hexdigest()
         attachments.append(attached_file)
 
     for index,attachment in enumerate(attachments,start=1):
-        data["Attachments"]["Data"][str(index)] = attachment["filename"]
+        data["Attachments"]["Data"][str(index)] = {
+            "filename":  attachment["filename"],
+            "mime_type": attachment["mime_type"]
+        }
 
     # If investigation requested
     if investigation:
@@ -350,7 +354,7 @@ def print_data(data):
 
         # Print Attachments
         for key,val in data["Analysis"]["Attachments"]["Data"].items():
-            print(f"[{key}]->{val}")
+            print(f"[{key}] {val['filename']} ({val['mime_type']})")
             print("_"*TER_COL_SIZE)
         
         # Print Investigation

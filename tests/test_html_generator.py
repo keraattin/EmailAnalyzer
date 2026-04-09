@@ -156,16 +156,20 @@ class TestLinksSectionEscaping:
 # Attachments section
 # ---------------------------------------------------------------------------
 
+def make_attachment_entry(filename, mime_type="application/octet-stream"):
+    return {"filename": filename, "mime_type": mime_type}
+
+
 class TestAttachmentsSectionEscaping:
     def test_attachment_filename_xss_escaped_in_data(self):
-        data = {"Data": {"1": xss_payload()}, "Investigation": {}}
+        data = {"Data": {"1": make_attachment_entry(xss_payload())}, "Investigation": {}}
         html = generate_attachment_section(data)
         assert "<script>" not in html
         assert "&lt;script&gt;" in html
 
     def test_attachment_index_xss_escaped_in_investigation(self):
         data = {
-            "Data": {"1": "malware.pdf"},
+            "Data": {"1": make_attachment_entry("malware.pdf")},
             "Investigation": {
                 xss_payload(): {"Virustotal": {"SHA256": "https://virustotal.com/test"}}
             }
@@ -175,7 +179,7 @@ class TestAttachmentsSectionEscaping:
 
     def test_attachment_url_xss_escaped_in_investigation_href(self):
         data = {
-            "Data": {"1": "malware.pdf"},
+            "Data": {"1": make_attachment_entry("malware.pdf")},
             "Investigation": {
                 "malware.pdf": {
                     "Virustotal": {"SHA256": f"https://virustotal.com/{xss_payload()}"}
@@ -187,7 +191,7 @@ class TestAttachmentsSectionEscaping:
 
     def test_attachment_hash_type_escaped_in_investigation(self):
         data = {
-            "Data": {"1": "malware.pdf"},
+            "Data": {"1": make_attachment_entry("malware.pdf")},
             "Investigation": {
                 "malware.pdf": {
                     "Virustotal": {xss_payload(): "https://virustotal.com/test"}
@@ -198,15 +202,25 @@ class TestAttachmentsSectionEscaping:
         assert "<script>" not in html
 
     def test_safe_attachment_filename_rendered_correctly(self):
-        data = {"Data": {"1": "document.pdf"}, "Investigation": {}}
+        data = {"Data": {"1": make_attachment_entry("document.pdf")}, "Investigation": {}}
         html = generate_attachment_section(data)
         assert "document.pdf" in html
 
     def test_attachment_filename_with_special_chars_escaped(self):
-        data = {"Data": {"1": "file<name>.pdf"}, "Investigation": {}}
+        data = {"Data": {"1": make_attachment_entry("file<name>.pdf")}, "Investigation": {}}
         html = generate_attachment_section(data)
         assert "<name>" not in html
         assert "&lt;name&gt;" in html
+
+    def test_attachment_mime_type_rendered(self):
+        data = {"Data": {"1": make_attachment_entry("invoice.pdf", "application/x-msdownload")}, "Investigation": {}}
+        html = generate_attachment_section(data)
+        assert "application/x-msdownload" in html
+
+    def test_attachment_mime_type_xss_escaped(self):
+        data = {"Data": {"1": make_attachment_entry("file.pdf", xss_payload())}, "Investigation": {}}
+        html = generate_attachment_section(data)
+        assert "<script>" not in html
 
 
 # ---------------------------------------------------------------------------
@@ -297,7 +311,7 @@ class TestRegressionBug32:
 
     def test_xss_payload_in_attachment_filename_cannot_execute_script(self):
         data = {
-            "Data": {"1": '"><script>alert(1)</script>'},
+            "Data": {"1": make_attachment_entry('"><script>alert(1)</script>')},
             "Investigation": {}
         }
         html = generate_attachment_section(data)
