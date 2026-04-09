@@ -22,6 +22,7 @@ get_links        = mod.get_links
 get_digests      = mod.get_digests
 get_attachments  = mod.get_attachments
 get_auth_results = mod.get_auth_results
+defang_url       = mod._defang_url
 
 
 def load_fixture(name: str) -> str:
