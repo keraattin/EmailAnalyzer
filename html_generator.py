@@ -71,7 +71,7 @@ def generate_links_section(links):
     for key,value in links["Data"].items():
         # Populate table rows
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(key,value)
+        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
         html += "</tr>"
         
     html += """
