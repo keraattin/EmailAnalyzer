@@ -59,7 +59,7 @@ def get_headers(mail_data : str, investigation):
     # Get Headers from mail data
     headers = HeaderParser().parsestr(mail_data, headersonly=True)
     # Create JSON data
-    data = json.loads('{"Headers":{"Data":{},"Investigation":{}}}')
+    data = {"Headers": {"Data": {}, "Investigation": {}}}
     # Put Header data to JSON
     for k,v in headers.items():
         decoded = str(make_header(decode_header(v)))
@@ -130,7 +130,7 @@ def get_auth_results(mail_data : str):
     headers = HeaderParser().parsestr(mail_data, headersonly=True)
 
     # Create JSON data
-    data = json.loads('{"Authentication":{"Data":{}}}')
+    data = {"Authentication": {"Data": {}}}
 
     # Parse Authentication-Results header(s)
     auth_headers = headers.get_all('Authentication-Results') or []
@@ -158,7 +158,7 @@ def get_digests(mail_data : str, file_bytes : bytes, investigation):
     content_sha256  = hashlib.sha256(mail_data.encode("utf-8")).hexdigest()
 
     # Create JSON data
-    data = json.loads('{"Digests":{"Data":{},"Investigation":{}}}')
+    data = {"Digests": {"Data": {}, "Investigation": {}}}
 
     # Write Data to JSON
     data["Digests"]["Data"]["File MD5"]         = file_md5
@@ -221,7 +221,7 @@ def get_links(mail_data : str, investigation, defang=False):
     links = list(filter(None, links))
 
     # Create JSON data
-    data = json.loads('{"Links":{"Data":{},"Investigation":{}}}')
+    data = {"Links": {"Data": {}, "Investigation": {}}}
 
     for index,link in enumerate(links,start=1):
         data["Links"]["Data"][str(index)] = _defang_url(link) if defang else link
@@ -245,7 +245,7 @@ def get_attachments(filename : str, investigation):
         msg = message_from_binary_file(f, policy=policy.default)
     
     # Create JSON data
-    data = json.loads('{"Attachments":{"Data":{},"Investigation":{}}}')
+    data = {"Attachments": {"Data": {}, "Investigation": {}}}
 
     # Get Attachments from Mail
     attachments = []
@@ -293,6 +293,12 @@ def get_attachments(filename : str, investigation):
 # Pretty Print Function
 ##############################################################################
 def print_data(data):
+    global TER_COL_SIZE
+    try:
+        TER_COL_SIZE = os.get_terminal_size().columns
+    except OSError:
+        pass  # keep default when not in a terminal
+
     # Inroduction Banner
     get_introduction_banner()
 
@@ -422,11 +428,8 @@ def write_to_file(filename, data):
 
 # Main
 ##############################################################################
-description = ""
 if __name__ == '__main__':
-    parser = ArgumentParser(
-        description=description
-    )
+    parser = ArgumentParser()
     parser.add_argument(
         "-f",
         "--filename",
@@ -492,13 +495,6 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    # If we are in a terminal
-    if sys.stdout.isatty():
-        # Get Terminal Column Size
-        terminal_size = os.get_terminal_size()
-        # Set Terminal Column Size
-        TER_COL_SIZE = terminal_size.columns
-
     # Filename
     if args.filename:
         # Get Filename
@@ -514,7 +510,7 @@ if __name__ == '__main__':
     data = file_bytes.decode("utf-8", errors="replace").rstrip()
 
     # Create JSON data
-    app_data = json.loads('{"Information": {}, "Analysis":{}}')
+    app_data = {"Information": {}, "Analysis": {}}
     app_data["Information"]["Project"] = {
         "Name":"EmailAnalyzer",
         "Url":"https://github.com/keraattin/EmailAnalyzer",
