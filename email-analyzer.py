@@ -419,11 +419,6 @@ def write_to_file(filename, data):
         with open(filename, 'w', encoding="utf-8") as file:
             html_data = generate_table_from_json(data)
             file.write(html_data)
-    # if Output File Format is NOT Supported
-    # file_format is NOT in SUPPORTED_FILE_TYPES
-    else:
-        print(f"{filename} file format not supported for output")
-        sys.exit(-1) #Exit with error code
 ##############################################################################
 
 # Main
@@ -494,6 +489,13 @@ if __name__ == '__main__':
         required=False
     )
     args = parser.parse_args()
+
+    # Validate output format before doing any work
+    if args.output:
+        output_format = args.output.split('.')[-1].lower()
+        if output_format not in SUPPORTED_OUTPUT_TYPES:
+            print(f"{output_format} file format not supported for output. Supported formats: {', '.join(SUPPORTED_OUTPUT_TYPES)}")
+            sys.exit(-1)
 
     # Filename
     if args.filename:
