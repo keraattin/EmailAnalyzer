@@ -239,6 +239,45 @@ class TestRegressionBug25:
             assert "Urlscan" in entry
 
 
+class TestRegressionBug60:
+    """Regression tests for Bug #60 — single-quoted href links silently missed."""
+
+    def test_single_quoted_href_extracted(self):
+        """Links inside single-quoted href attributes must be found."""
+        mail_data = load_fixture("single_quote_links.eml")
+        result = get_links(mail_data, investigation=False)
+        data = result["Links"]["Data"]
+
+        assert any("single-quote-site.com" in v for v in data.values())
+
+    def test_double_quoted_href_still_extracted(self):
+        """Double-quoted href links must still be found after the regex change."""
+        mail_data = load_fixture("single_quote_links.eml")
+        result = get_links(mail_data, investigation=False)
+        data = result["Links"]["Data"]
+
+        assert any("double-quote-site.com" in v for v in data.values())
+
+    def test_mixed_quote_styles_all_extracted(self):
+        """Email with both single and double quoted hrefs must extract all links."""
+        mail_data = load_fixture("single_quote_links.eml")
+        result = get_links(mail_data, investigation=False)
+        data = result["Links"]["Data"]
+
+        assert len(data) == 3
+
+    def test_single_quoted_link_in_investigation(self):
+        """Single-quoted href links must also appear in investigation output."""
+        mail_data = load_fixture("single_quote_links.eml")
+        result = get_links(mail_data, investigation=True)
+        inv = result["Links"]["Investigation"]
+
+        assert len(inv) == 3
+        for entry in inv.values():
+            assert "Virustotal" in entry
+            assert "Urlscan" in entry
+
+
 class TestRegressionBug59:
     """Regression tests for Bug #59 — QP decoding applied to entire raw email."""
 

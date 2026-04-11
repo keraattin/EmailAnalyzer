@@ -1,0 +1,15 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Single Quote Href Test
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset="utf-8"
+
+<!DOCTYPE html>
+<html>
+<body>
+<p><a href='https://single-quote-site.com/page'>Click here</a></p>
+<p><a href='https://another-single.com/path'>Another link</a></p>
+<p><a href="https://double-quote-site.com/page">Double quoted</a></p>
+</body>
+</html>
