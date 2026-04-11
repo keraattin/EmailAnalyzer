@@ -1,5 +1,17 @@
 import json
 from html import escape
+from urllib.parse import urlparse
+
+# Allowed URL schemes for href attributes
+ALLOWED_URL_SCHEMES = ('http', 'https')
+
+def is_safe_url(url):
+    """Validate that a URL has an allowed scheme (http/https)."""
+    try:
+        parsed = urlparse(url)
+        return parsed.scheme in ALLOWED_URL_SCHEMES
+    except Exception:
+        return False
 
 def generate_headers_section(headers):
     # Data
@@ -18,15 +30,15 @@ def generate_headers_section(headers):
         <tbody>
     """
     for key,value in headers["Data"].items():
-        # Populate table rows
-        html += f"<tr><td>{ str(key) }</td><td>{ escape(str(value)) }</td></tr>"
-        
+        # Populate table rows with proper HTML escaping
+        html += f"<tr><td>{ escape(str(key)) }</td><td>{ escape(str(value)) }</td></tr>"
+
     html += """
         </tbody>
     </table>
     """
     ######################################################################
-    
+
     # Investigation
     ######################################################################
     html += """
@@ -34,15 +46,15 @@ def generate_headers_section(headers):
         <div class="row">
     """
     for index,values in headers["Investigation"].items():
-        # Populate table rows
+        # Populate table rows with proper HTML escaping
         html += """
         <div class="col-md-4">
             <div class="jumbotron">
                 <h3>{}</h3><hr>
-        """.format(index)
+        """.format(escape(str(index)))
         for k,v in values.items():
-            html += f"<br><b>{k}:<br></b>{v}"
-        
+            html += f"<br><b>{ escape(str(k)) }:<br></b>{ escape(str(v)) }"
+
         html += """
             </div>
         </div>
@@ -69,11 +81,11 @@ def generate_links_section(links):
         <tbody>
     """
     for key,value in links["Data"].items():
-        # Populate table rows
+        # Populate table rows with proper HTML escaping
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(key,value)
+        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
         html += "</tr>"
-        
+
     html += """
         </tbody>
     </table>"""
@@ -93,13 +105,14 @@ def generate_links_section(links):
         <tbody>
     """
     for index,values in links["Investigation"].items():
-        # Populate table rows
+        # Populate table rows with proper HTML escaping and URL validation
         html += "<tr>"
-        html += "<td>{}</td><td>".format(index)
+        html += "<td>{}</td><td>".format(escape(str(index)))
         for k,v in values.items():
-            html += f"<b><a href='{v}' target='_blank'>{k} Scan</a></b>&nbsp;&nbsp;"
+            safe_url = v if is_safe_url(v) else '#'
+            html += f"<b><a href='{ escape(safe_url) }' target='_blank'>{ escape(str(k)) } Scan</a></b>&nbsp;&nbsp;"
         html += "</td></tr>"
-        
+
     html += """
         </tbody>
     </table>
@@ -125,11 +138,11 @@ def generate_attachment_section(attachments):
         <tbody>
     """
     for key,value in attachments["Data"].items():
-        # Populate table rows
+        # Populate table rows with proper HTML escaping
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(key,value)
+        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
         html += "</tr>"
-        
+
     html += """
         </tbody>
     </table>"""
@@ -149,14 +162,15 @@ def generate_attachment_section(attachments):
         <tbody>
     """
     for index,values in attachments["Investigation"].items():
-        # Populate table rows
+        # Populate table rows with proper HTML escaping and URL validation
         html += "<tr>"
-        html += "<td>{}</td><td>".format(index)
+        html += "<td>{}</td><td>".format(escape(str(index)))
         for k,v in values.items():
             for x,y in v.items():
-                html += f"<b><a href='{y}' target='_blank'>{x} Scan({k})</a></b><br>"
+                safe_url = y if is_safe_url(y) else '#'
+                html += f"<b><a href='{ escape(safe_url) }' target='_blank'>{ escape(str(x)) } Scan({ escape(str(k)) })</a></b><br>"
         html += "</td></tr>"
-        
+
     html += """
         </tbody>
     </table>
@@ -182,11 +196,11 @@ def generate_digest_section(digests):
         <tbody>
     """
     for key,value in digests["Data"].items():
-        # Populate table rows
+        # Populate table rows with proper HTML escaping
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(key,value)
+        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
         html += "</tr>"
-        
+
     html += """
         </tbody>
     </table>"""
@@ -206,13 +220,14 @@ def generate_digest_section(digests):
         <tbody>
     """
     for index,values in digests["Investigation"].items():
-        # Populate table rows
+        # Populate table rows with proper HTML escaping and URL validation
         html += "<tr>"
-        html += "<td>{}</td><td>".format(index)
+        html += "<td>{}</td><td>".format(escape(str(index)))
         for k,v in values.items():
-            html += f"<b><a href='{v}' target='_blank'>{k} scan</a></b><br>"
+            safe_url = v if is_safe_url(v) else '#'
+            html += f"<b><a href='{ escape(safe_url) }' target='_blank'>{ escape(str(k)) } scan</a></b><br>"
         html += "</td></tr>"
-        
+
     html += """
         </tbody>
     </table>
@@ -269,6 +284,7 @@ def generate_table_from_json(json_obj):
                 <span class="navbar-toggler-icon"></span>
             </button>
 
+
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav mr-auto">
                 <li class="nav-item dropdown">
@@ -310,6 +326,7 @@ def generate_table_from_json(json_obj):
                 </ul>
             </div>
 
+
             <div class="d-flex">
                 <!-- Star -->
                 <a class="github-button" href="https://github.com/keraattin/EmailAnalyzer" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star keraattin/EmailAnalyzer on GitHub">Star</a>
@@ -322,9 +339,10 @@ def generate_table_from_json(json_obj):
             </div>
         </nav>
 
+
         <div class="container-fluid">
         """
-    
+
     html += f"""
         <h2 style="text-align: center;"><i class="fa-solid fa-circle-info"></i> Information</h2>
         <hr>
@@ -335,16 +353,19 @@ def generate_table_from_json(json_obj):
                     <tbody>
                         <tr>
                             <td>Name</td>
-                            <td>{ info_data["Project"]["Name"] }</td>
+                            <td>{ escape(info_data["Project"]["Name"]) }</td>
                         </tr>
+
                         <tr>
                             <td>Url</td>
-                            <td><a href="{ info_data["Project"]["Url"] }" target='_blank'>{ info_data["Project"]["Url"] }</a></td>
+                            <td><a href="{ escape(info_data["Project"]["Url"]) }" target='_blank'>{ escape(info_data["Project"]["Url"]) }</a></td>
                         </tr>
+
                         <tr>
                             <td>Version</td>
-                            <td>{ info_data["Project"]["Version"] }</td>
+                            <td>{ escape(info_data["Project"]["Version"]) }</td>
                         </tr>
+
                     </tbody>
                 </table>
             </div>
@@ -354,31 +375,34 @@ def generate_table_from_json(json_obj):
                     <tbody>
                         <tr>
                             <td>Name</td>
-                            <td>{ info_data["Scan"]["Filename"] }</td>
+                            <td>{ escape(info_data["Scan"]["Filename"]) }</td>
                         </tr>
+
                         <tr>
                             <td>Generated</td>
-                            <td>{ info_data["Scan"]["Generated"] }</td>
+                            <td>{ escape(info_data["Scan"]["Generated"]) }</td>
                         </tr>
+
                     </tbody>
                 </table>
             </div>
         </div>
     """
 
+
     if data.get("Headers"):
         html += generate_headers_section(data["Headers"])
-    
+
     if data.get("Links"):
         html += generate_links_section(data["Links"])
 
     if data.get("Attachments"):
         html += generate_attachment_section(data["Attachments"])
 
-    if data.get("Digests"):    
+    if data.get("Digests"):
         html += generate_digest_section(data["Digests"])
-    
-    
+
+
     html += """
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
