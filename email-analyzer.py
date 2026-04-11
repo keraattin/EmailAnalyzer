@@ -30,7 +30,7 @@ SUPPORTED_FILE_TYPES = ["eml"]
 SUPPORTED_OUTPUT_TYPES = ["json","html"]
 
 # REGEX
-LINK_REGEX = r'href=\"((?:\S)*)\"'
+LINK_REGEX = r'href=["\']([^"\'>\s]+)["\']'
 MAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
 IP_REGEX   = r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b'
 AUTH_REGEX = r'\b(spf|dkim|dmarc)=(pass|fail|softfail|neutral|none|temperror|permerror)\b'
