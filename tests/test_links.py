@@ -237,3 +237,36 @@ class TestRegressionBug25:
         for entry in inv.values():
             assert "Virustotal" in entry
             assert "Urlscan" in entry
+
+
+class TestRegressionBug59:
+    """Regression tests for Bug #59 — QP decoding applied to entire raw email."""
+
+    def test_multipart_qp_links_extracted(self):
+        """Links in a QP-encoded part of a multipart email must be found."""
+        mail_data = load_fixture("multipart_qp_links.eml")
+        result = get_links(mail_data, investigation=False)
+        data = result["Links"]["Data"]
+
+        assert any("phishing-site.com" in v for v in data.values())
+        assert any("cafe-example.com" in v for v in data.values())
+
+    def test_multipart_qp_attachment_does_not_corrupt_links(self):
+        """Base64 attachment in same multipart email must not corrupt link extraction."""
+        mail_data = load_fixture("multipart_qp_links.eml")
+        result = get_links(mail_data, investigation=False)
+        data = result["Links"]["Data"]
+
+        # Only HTML body links — no garbled attachment content as a link
+        assert len(data) == 2
+
+    def test_multipart_qp_investigation_works(self):
+        """Investigation mode must work correctly on multipart QP email."""
+        mail_data = load_fixture("multipart_qp_links.eml")
+        result = get_links(mail_data, investigation=True)
+        inv = result["Links"]["Investigation"]
+
+        assert len(inv) == 2
+        for entry in inv.values():
+            assert "Virustotal" in entry
+            assert "Urlscan" in entry

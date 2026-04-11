@@ -3,13 +3,12 @@
 # Libraries
 ##############################################################################
 from email.parser import HeaderParser
-from email import message_from_binary_file,policy
+from email import message_from_binary_file,message_from_string,policy
 from email.header import decode_header,make_header
 from argparse import ArgumentParser
 import sys
 import hashlib
 import re
-import quopri
 import os
 import json
 import ipaddress
@@ -208,12 +207,24 @@ def _defang_url(url):
 def get_links(mail_data : str, investigation, defang=False):
     '''Get Links from mail data'''
 
-    # If content of eml file is Encoded -> Decode
-    if "Content-Transfer-Encoding: quoted-printable" in mail_data:
-        mail_data = quopri.decodestring(mail_data.encode()).decode("utf-8", errors="replace")
+    # Parse the email and decode each text part individually
+    msg = message_from_string(mail_data, policy=policy.compat32)
+    decoded_parts = []
+    for part in msg.walk():
+        if part.get_content_maintype() == "multipart":
+            continue
+        payload = part.get_payload(decode=True)
+        if payload is None:
+            continue
+        charset = part.get_content_charset() or "utf-8"
+        try:
+            decoded_parts.append(payload.decode(charset, errors="replace"))
+        except (LookupError, UnicodeDecodeError):
+            decoded_parts.append(payload.decode("utf-8", errors="replace"))
+    combined = "\n".join(decoded_parts)
 
-    # Find the Links    
-    links = re.findall(LINK_REGEX, mail_data)
+    # Find the Links
+    links = re.findall(LINK_REGEX, combined)
 
     # Remove Duplicates
     links = list(dict.fromkeys(links))
