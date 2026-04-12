@@ -517,7 +517,11 @@ if __name__ == '__main__':
         if file_format not in SUPPORTED_FILE_TYPES:
             print(f"{file_format} file format not supported")
             sys.exit(-1) #Exit with error code
-    
+
+    if not os.path.isfile(filename):
+        print(f"File not found: {filename}")
+        sys.exit(-1)
+
     with open(filename,"rb") as file:
         file_bytes = file.read()
     data = file_bytes.decode("utf-8", errors="replace").rstrip()
