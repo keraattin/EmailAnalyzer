@@ -338,3 +338,33 @@ class TestRegressionBug27:
 
         assert "payload.exe" in inv
         assert len(inv["payload.exe"]["Virustotal"]["SHA256"].split("/")[-1]) == 64
+
+
+class TestRegressionBug62:
+    """Regression tests for Bug #62 — unnamed attachment fallback index mismatch."""
+
+    def test_unnamed_attachment_fallback_name_matches_data_key(self):
+        """When earlier parts are skipped, the fallback name index must match the Data key."""
+        result = get_attachments(
+            fixture_path("skipped_then_unnamed_attachment.eml"), investigation=False
+        )
+        data = result["Attachments"]["Data"]
+        assert "1" in data
+        assert data["1"]["filename"] == "unnamed_attachment_1"
+
+    def test_unnamed_attachment_stored_at_key_one(self):
+        """The sole collected attachment must be at Data key '1'."""
+        result = get_attachments(
+            fixture_path("skipped_then_unnamed_attachment.eml"), investigation=False
+        )
+        assert len(result["Attachments"]["Data"]) == 1
+        assert "1" in result["Attachments"]["Data"]
+
+    def test_fallback_name_not_unnamed_attachment_two(self):
+        """Old bug: skipped part caused fallback name to be unnamed_attachment_2 at key '1'."""
+        result = get_attachments(
+            fixture_path("skipped_then_unnamed_attachment.eml"), investigation=False
+        )
+        data = result["Attachments"]["Data"]
+        assert data["1"]["filename"] != "unnamed_attachment_2"
+
