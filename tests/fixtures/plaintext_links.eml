@@ -1,0 +1,11 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Plain Text Links Test
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+Please verify your account at https://phishing-site.com/verify
+Or visit http://backup-site.net/confirm for more info.
+Do not reply to this email.
+For questions see https://help.example.com/faq.

@@ -30,7 +30,8 @@ SUPPORTED_FILE_TYPES = ["eml"]
 SUPPORTED_OUTPUT_TYPES = ["json","html"]
 
 # REGEX
-LINK_REGEX = r'href=["\']([^"\'>\s]+)["\']'
+LINK_REGEX           = r'href=["\']([^"\'>\s]+)["\']'
+PLAINTEXT_URL_REGEX  = r'https?://\S+'
 MAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
 IP_REGEX   = r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b'
 AUTH_REGEX = r'\b(spf|dkim|dmarc)=(pass|fail|softfail|neutral|none|temperror|permerror)\b'
@@ -207,9 +208,10 @@ def _defang_url(url):
 def get_links(mail_data : str, investigation, defang=False):
     '''Get Links from mail data'''
 
-    # Parse the email and decode each text part individually
+    # Parse the email and extract links from each part by content type
     msg = message_from_string(mail_data, policy=policy.compat32)
-    decoded_parts = []
+    html_links   = []
+    plain_links  = []
     for part in msg.walk():
         if part.get_content_maintype() == "multipart":
             continue
@@ -218,16 +220,21 @@ def get_links(mail_data : str, investigation, defang=False):
             continue
         charset = part.get_content_charset() or "utf-8"
         try:
-            decoded_parts.append(payload.decode(charset, errors="replace"))
+            text = payload.decode(charset, errors="replace")
         except (LookupError, UnicodeDecodeError):
-            decoded_parts.append(payload.decode("utf-8", errors="replace"))
-    combined = "\n".join(decoded_parts)
+            text = payload.decode("utf-8", errors="replace")
 
-    # Find the Links
-    links = re.findall(LINK_REGEX, combined)
+        if part.get_content_type() == "text/html":
+            html_links.extend(re.findall(LINK_REGEX, text))
+        elif part.get_content_type() == "text/plain":
+            # Strip trailing punctuation that is unlikely to be part of a URL
+            plain_links.extend(
+                url.rstrip(".,;:!?)]>\"'")
+                for url in re.findall(PLAINTEXT_URL_REGEX, text)
+            )
 
-    # Remove Duplicates
-    links = list(dict.fromkeys(links))
+    # HTML href links take priority; plain-text URLs fill in anything new
+    links = list(dict.fromkeys(html_links + plain_links))
     # Remove Empty Values
     links = list(filter(None, links))
 
