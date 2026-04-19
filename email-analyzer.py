@@ -5,6 +5,7 @@
 from email.parser import HeaderParser
 from email import message_from_binary_file,message_from_string,policy
 from email.header import decode_header,make_header
+from email.utils import parseaddr
 from argparse import ArgumentParser
 import sys
 import hashlib
@@ -120,6 +121,33 @@ def get_headers(mail_data : str, investigation):
                 data["Headers"]["Investigation"]["Spoof Check"] = {
                     "Reply-To" : replyto,
                     "From": mailfrom,
+                    "Conclusion": conclusion
+                }
+
+        # Display Name Check
+        if data["Headers"]["Data"].get("from"):
+            disp_name, addr = parseaddr(data["Headers"]["Data"]["from"])
+            sending_domain = addr.split("@")[-1].lower() if "@" in addr else ""
+
+            if disp_name:
+                # Find domain-like tokens (e.g. "paypal.com") inside the display name
+                display_domains = re.findall(r'\b[a-zA-Z0-9-]+\.[a-zA-Z]{2,}\b', disp_name)
+
+                if display_domains and all(d.lower() != sending_domain for d in display_domains):
+                    conclusion = (
+                        f"Display name contains '{', '.join(display_domains)}' "
+                        f"which does not match sending domain '{sending_domain}'. "
+                        f"Possible impersonation."
+                    )
+                elif display_domains:
+                    conclusion = "Display name is consistent with the sending domain."
+                else:
+                    conclusion = "No domain detected in display name."
+
+                data["Headers"]["Investigation"]["Display Name Check"] = {
+                    "Display Name": disp_name,
+                    "Address": addr,
+                    "Sending Domain": sending_domain,
                     "Conclusion": conclusion
                 }
 
