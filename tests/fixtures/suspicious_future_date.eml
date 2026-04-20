@@ -1,0 +1,9 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Future Date Test
+Message-ID: <future@example.com>
+Date: Wed, 01 Jan 2099 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+This email has a date far in the future.

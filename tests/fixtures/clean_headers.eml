@@ -1,0 +1,9 @@
+From: "Sender Name" <sender@example.com>
+To: recipient@example.com
+Subject: Clean Headers Test
+Message-ID: <clean123@example.com>
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+This email has all expected headers present and valid.

@@ -175,11 +175,13 @@ class TestMinimalEmail:
         assert result["Headers"]["Data"]["to"] == "recipient@example.com"
         assert result["Headers"]["Data"]["subject"] == "Minimal Email"
 
-    def test_minimal_email_investigation_is_empty(self):
-        """No X-Sender-IP and no Reply-To → investigation section stays empty."""
+    def test_minimal_email_no_spoof_or_ip_investigation(self):
+        """No X-Sender-IP and no Reply-To → Spoof Check and X-Sender-Ip must be absent."""
         mail_data = load_fixture("minimal.eml")
         result = get_headers(mail_data, investigation=True)
-        assert result["Headers"]["Investigation"] == {}
+        inv = result["Headers"]["Investigation"]
+        assert "Spoof Check" not in inv
+        assert "X-Sender-Ip" not in inv
 
     def test_minimal_email_missing_optional_headers(self):
         """Optional headers like mime-version, content-type must not appear."""
@@ -216,14 +218,15 @@ class TestInvestigationUrlFormats:
         inv = result["Headers"]["Investigation"]
 
         assert "X-Sender-Ip" not in inv
-        # Only Spoof Check should be present (has Reply-To and From)
-        assert set(inv.keys()) == {"Spoof Check"}
+        assert "Spoof Check" in inv
 
-    def test_investigation_with_no_investigatable_headers_is_empty(self):
-        """No X-Sender-IP and no Reply-To → investigation must be empty dict."""
+    def test_investigation_with_no_investigatable_headers_has_no_spoof_or_ip(self):
+        """No X-Sender-IP and no Reply-To → Spoof Check and X-Sender-Ip must be absent."""
         mail_data = load_fixture("minimal.eml")
         result = get_headers(mail_data, investigation=True)
-        assert result["Headers"]["Investigation"] == {}
+        inv = result["Headers"]["Investigation"]
+        assert "Spoof Check" not in inv
+        assert "X-Sender-Ip" not in inv
 
 
 class TestRegressionBug26:
