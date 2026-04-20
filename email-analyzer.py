@@ -79,7 +79,14 @@ def get_headers(mail_data : str, investigation):
                 "Virustotal":f'https://www.virustotal.com/gui/search/{data["Headers"]["Data"]["x-sender-ip"]}',
                 "Abuseipdb":f'https://www.abuseipdb.com/check/{data["Headers"]["Data"]["x-sender-ip"]}'
             }
-        
+
+        # X-Originating-IP Investigation
+        if data["Headers"]["Data"].get("x-originating-ip"):
+            data["Headers"]["Investigation"]["X-Originating-Ip"] = {
+                "Virustotal": f'https://www.virustotal.com/gui/search/{data["Headers"]["Data"]["x-originating-ip"]}',
+                "Abuseipdb": f'https://www.abuseipdb.com/check/{data["Headers"]["Data"]["x-originating-ip"]}'
+            }
+
         # Received Header IP Investigation
         if data["Headers"]["Data"].get("received"):
             received_ips = dict.fromkeys(
