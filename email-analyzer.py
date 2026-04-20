@@ -5,7 +5,7 @@
 from email.parser import HeaderParser
 from email import message_from_binary_file,message_from_string,policy
 from email.header import decode_header,make_header
-from email.utils import parseaddr
+from email.utils import parseaddr, parsedate_to_datetime
 from argparse import ArgumentParser
 import sys
 import hashlib
@@ -13,7 +13,7 @@ import re
 import os
 import json
 import ipaddress
-from datetime import datetime
+from datetime import datetime, timezone
 from banners import (
     get_introduction_banner,get_headers_banner,get_links_banner,
     get_digests_banner,get_attachment_banner,get_investigation_banner,
@@ -150,6 +150,51 @@ def get_headers(mail_data : str, investigation):
                     "Sending Domain": sending_domain,
                     "Conclusion": conclusion
                 }
+
+        # Suspicious Headers Check
+        suspicious = {}
+
+        if not data["Headers"]["Data"].get("message-id"):
+            suspicious["Missing Message-ID"] = (
+                "Legitimate mail transfer agents always generate a Message-ID. "
+                "Its absence suggests a script-generated or spoofed email."
+            )
+
+        if not data["Headers"]["Data"].get("mime-version"):
+            suspicious["Missing MIME-Version"] = (
+                "MIME-Version header is absent. Expected in all modern emails."
+            )
+
+        if data["Headers"]["Data"].get("date"):
+            try:
+                msg_date = parsedate_to_datetime(data["Headers"]["Data"]["date"])
+                now = datetime.now(timezone.utc)
+                days_diff = (msg_date - now).total_seconds() / 86400
+                if days_diff > 2:
+                    suspicious["Future Date"] = (
+                        f"Email date is {int(days_diff)} days in the future "
+                        f"({data['Headers']['Data']['date']}). Possible timestamp manipulation."
+                    )
+                elif days_diff < -30:
+                    suspicious["Old Date"] = (
+                        f"Email date is {int(abs(days_diff))} days in the past "
+                        f"({data['Headers']['Data']['date']}). Possible replayed or manipulated message."
+                    )
+            except Exception:
+                suspicious["Unparseable Date"] = (
+                    f"Could not parse Date header: {data['Headers']['Data']['date']}"
+                )
+
+        SUSPICIOUS_MAILERS = ["phpmailer", "the bat", "libwww-perl"]
+        xmailer = data["Headers"]["Data"].get("x-mailer", "").lower()
+        if any(tool in xmailer for tool in SUSPICIOUS_MAILERS):
+            suspicious["Suspicious X-Mailer"] = (
+                f"X-Mailer value '{data['Headers']['Data']['x-mailer']}' is associated "
+                f"with bulk or script-based mail sending."
+            )
+
+        if suspicious:
+            data["Headers"]["Investigation"]["Suspicious Headers"] = suspicious
 
     return data
 
