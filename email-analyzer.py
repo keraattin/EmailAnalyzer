@@ -24,6 +24,9 @@ from html_generator import generate_table_from_json
 
 # Global Values
 ##############################################################################
+# Version
+VERSION = "2.0"
+
 # Supported File Types
 SUPPORTED_FILE_TYPES = ["eml"]
 
@@ -550,6 +553,11 @@ def write_to_file(filename, data):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {VERSION}"
+    )
+    parser.add_argument(
         "-f",
         "--filename",
         type=str,
@@ -644,7 +652,7 @@ if __name__ == '__main__':
     app_data["Information"]["Project"] = {
         "Name":"EmailAnalyzer",
         "Url":"https://github.com/keraattin/EmailAnalyzer",
-        "Version": "2.0",
+        "Version": VERSION,
     }
     app_data["Information"]["Scan"] = {
         "Filename": filename,

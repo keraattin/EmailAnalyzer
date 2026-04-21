@@ -5,10 +5,11 @@ With EmailAnalyzer you can able to analyze your suspicious emails. You can extra
 
 ## Usage
 ```
-usage: email-analyzer.py [-h] -f FILENAME [-H] [-d] [-l] [-a] [-A] [-D] [-i] [-o OUTPUT]
+usage: email-analyzer.py [-h] [--version] -f FILENAME [-H] [-d] [-l] [-a] [-A] [-D] [-i] [-o OUTPUT]
 
 options:
   -h, --help            show this help message and exit
+  --version             Show program version and exit
   -f, --filename FILENAME
                         Name of the EML file
   -H, --headers         To get the Headers of the Email
@@ -414,6 +415,11 @@ _________________________________________________________
 ```
 
 > When two or more attachments share the same SHA256 hash, a **Duplicate Warning** is added to the investigation output listing the shared hash and the filenames involved.
+
+## To Check Version
+```
+python3 email-analyzer.py --version
+```
 
 ## Testing
 
