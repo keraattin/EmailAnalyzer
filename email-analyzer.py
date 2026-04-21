@@ -158,6 +158,30 @@ def get_headers(mail_data : str, investigation):
                     "Conclusion": conclusion
                 }
 
+        # Reply-To Domain Check
+        if data["Headers"]["Data"].get("reply-to") and data["Headers"]["Data"].get("from"):
+            replyto_matches = re.findall(MAIL_REGEX, data["Headers"]["Data"]["reply-to"])
+            mailfrom_matches = re.findall(MAIL_REGEX, data["Headers"]["Data"]["from"])
+            if replyto_matches and mailfrom_matches:
+                replyto_addr  = replyto_matches[0]
+                mailfrom_addr = mailfrom_matches[0]
+                replyto_domain  = replyto_addr.split("@")[-1].lower()  if "@" in replyto_addr  else ""
+                mailfrom_domain = mailfrom_addr.split("@")[-1].lower() if "@" in mailfrom_addr else ""
+                if replyto_domain and mailfrom_domain and replyto_domain != mailfrom_domain:
+                    conclusion = (
+                        f"Reply-To domain '{replyto_domain}' differs from From domain "
+                        f"'{mailfrom_domain}'. Replies will be directed to a different domain."
+                    )
+                else:
+                    conclusion = f"Reply-To domain matches From domain ('{replyto_domain}')."
+                data["Headers"]["Investigation"]["Reply-To Domain Check"] = {
+                    "Reply-To Address": replyto_addr,
+                    "Reply-To Domain": replyto_domain,
+                    "From Address": mailfrom_addr,
+                    "From Domain": mailfrom_domain,
+                    "Conclusion": conclusion
+                }
+
         # Suspicious Headers Check
         suspicious = {}
 

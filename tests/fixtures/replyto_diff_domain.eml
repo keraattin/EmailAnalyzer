@@ -1,0 +1,10 @@
+From: support@bank.com
+Reply-To: attacker@evil.com
+To: victim@example.com
+Subject: Reply-To Domain Mismatch Test
+Message-ID: <replyto-diff@example.com>
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+Reply-To domain differs from From domain.
