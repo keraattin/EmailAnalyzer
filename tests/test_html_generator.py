@@ -418,3 +418,54 @@ class TestRegressionBug33:
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
         assert 'aria-labelledby="navbarDropdown"' not in html
+
+
+# ---------------------------------------------------------------------------
+# Fix #74 — missing <!DOCTYPE html>, <html>, <body> structure tags
+# ---------------------------------------------------------------------------
+
+class TestHtmlStructureFix74:
+    """Verify the generated report is a complete, valid HTML document."""
+
+    def test_doctype_present(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert html.strip().startswith("<!DOCTYPE html>")
+
+    def test_html_open_tag_present(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert "<html" in html
+
+    def test_html_close_tag_present(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert "</html>" in html
+
+    def test_body_open_tag_present(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert "<body>" in html
+
+    def test_body_close_tag_present(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert "</body>" in html
+
+    def test_title_contains_filename(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert "<title>" in html
+        assert "test.eml" in html
+
+    def test_charset_meta_present(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'charset="UTF-8"' in html or "charset=UTF-8" in html
+
+    def test_title_xss_escaped(self):
+        info = make_info()
+        info["Scan"]["Filename"] = xss_payload()
+        app_data = {"Information": info, "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert "<script>" not in html

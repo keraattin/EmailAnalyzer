@@ -296,12 +296,17 @@ def generate_table_from_json(json_obj):
         auth_cnt = 0
 
     # Generate HTML table with Bootstrap classes
-    html = f"""
-        <head>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-            <script async defer src="https://buttons.github.io/buttons.js"></script>
-        </head>
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Analyzer Report — { escape(info_data["Scan"]["Filename"]) }</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+</head>
+<body>
 
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <a class="navbar-brand" href="#"><i class="fa fa-envelope"></i> Email Analyzer</a>
@@ -434,6 +439,7 @@ def generate_table_from_json(json_obj):
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
-    """
+</body>
+</html>"""
 
     return html
