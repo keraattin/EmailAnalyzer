@@ -6,6 +6,7 @@ Covers:
 - Unsupported input file format exits with error
 - Unsupported output format exits with error before analysis
 - Valid file runs without error
+- --version flag prints version and exits with code 0 (#75)
 """
 
 import subprocess
@@ -59,3 +60,26 @@ class TestRegressionBug61:
         assert returncode != 0
         # No analysis banner should appear — exited before any work
         assert "EmailAnalyzer" not in stdout
+
+
+class TestVersionFlag:
+    """Tests for the --version flag (Enhancement #75)."""
+
+    def test_version_exits_zero(self):
+        returncode, _, _ = run_cli("--version")
+        assert returncode == 0
+
+    def test_version_prints_version_number(self):
+        _, stdout, stderr = run_cli("--version")
+        combined = stdout + stderr
+        assert "2.0" in combined
+
+    def test_version_works_without_filename(self):
+        """--version must not require -f to be present."""
+        returncode, _, _ = run_cli("--version")
+        assert returncode == 0
+
+    def test_version_output_contains_script_name(self):
+        _, stdout, stderr = run_cli("--version")
+        combined = stdout + stderr
+        assert "email-analyzer" in combined
