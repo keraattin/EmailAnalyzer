@@ -256,6 +256,90 @@ def generate_digest_section(digests):
     return html
     ######################################################################
 
+def generate_summary_section(data):
+    headers_data = data.get("Headers", {}).get("Data", {})
+    headers_inv  = data.get("Headers", {}).get("Investigation", {})
+    auth_data    = data.get("Authentication", {}).get("Data", {})
+    links_cnt    = len(data.get("Links", {}).get("Data", {}))
+    attach_cnt   = len(data.get("Attachments", {}).get("Data", {}))
+
+    # Collect triggered threat flags
+    threat_flags = []
+
+    spoof = headers_inv.get("Spoof Check", {})
+    if "SPOOFED" in spoof.get("Conclusion", ""):
+        threat_flags.append(("danger", "Spoof Check", spoof["Conclusion"]))
+
+    dn = headers_inv.get("Display Name Check", {})
+    if "impersonation" in dn.get("Conclusion", "").lower():
+        threat_flags.append(("warning", "Display Name Check", dn["Conclusion"]))
+
+    rt = headers_inv.get("Reply-To Domain Check", {})
+    if "differ" in rt.get("Conclusion", "").lower():
+        threat_flags.append(("warning", "Reply-To Domain Check", rt["Conclusion"]))
+
+    for flag_name, flag_detail in headers_inv.get("Suspicious Headers", {}).items():
+        threat_flags.append(("warning", f"Suspicious Header: {flag_name}", flag_detail))
+
+    for proto, result in auth_data.items():
+        if result in ("fail", "softfail"):
+            threat_flags.append(("danger", f"Auth Failure: {proto.upper()}", f"{proto.upper()} result is '{result}'"))
+
+    dup = headers_inv.get("Duplicate Warning") or data.get("Attachments", {}).get("Investigation", {}).get("Duplicate Warning")
+    if dup:
+        threat_flags.append(("warning", "Duplicate Attachments", "One or more attachments share the same SHA256 hash."))
+
+    # Threat level
+    if any(color == "danger" for color, _, _ in threat_flags):
+        level, level_class = "HIGH", "danger"
+    elif threat_flags:
+        level, level_class = "MEDIUM", "warning"
+    else:
+        level, level_class = "LOW", "success"
+
+    html = """
+        <h2 id="summary-section" style="text-align: center;"><i class="fa-solid fa-shield-halved"></i> Threat Summary</h2>
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <h3><i class="fa-solid fa-envelope-open-text"></i> Email Overview</h3>
+                <table class="table table-bordered table-striped">
+                    <tbody>
+    """
+    for field in ("from", "to", "subject", "date"):
+        value = headers_data.get(field, "—")
+        html += f"<tr><td><b>{escape(field.capitalize())}</b></td><td>{escape(str(value))}</td></tr>"
+    html += f"""
+                        <tr><td><b>Links Found</b></td><td>{links_cnt}</td></tr>
+                        <tr><td><b>Attachments Found</b></td><td>{attach_cnt}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Threat Level &nbsp;
+                    <span class="badge badge-{level_class}">{escape(level)}</span>
+                </h3>
+                <hr>
+    """
+
+    if threat_flags:
+        for color, name, detail in threat_flags:
+            html += f"""
+                <div class="alert alert-{color}" role="alert">
+                    <b>{escape(name)}</b><br>{escape(str(detail))}
+                </div>
+            """
+    else:
+        html += '<div class="alert alert-success" role="alert">No threat indicators detected.</div>'
+
+    html += """
+            </div>
+        </div>
+        <hr>
+    """
+    return html
+
+
 def generate_table_from_json(json_obj):
     # Parse JSON object
     data = json_obj["Analysis"]
@@ -316,6 +400,9 @@ def generate_table_from_json(json_obj):
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#summary-section"><i class="fa-solid fa-shield-halved"></i> Summary</a>
+                </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="headersDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Headers
@@ -418,6 +505,8 @@ def generate_table_from_json(json_obj):
             </div>
         </div>
     """
+
+    html += generate_summary_section(data)
 
     if data.get("Headers"):
         html += generate_headers_section(data["Headers"])
