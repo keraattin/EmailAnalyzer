@@ -33,6 +33,7 @@ generate_headers_section    = mod.generate_headers_section
 generate_links_section      = mod.generate_links_section
 generate_attachment_section = mod.generate_attachment_section
 generate_digest_section     = mod.generate_digest_section
+generate_summary_section    = mod.generate_summary_section
 generate_table_from_json    = mod.generate_table_from_json
 
 
@@ -468,4 +469,120 @@ class TestHtmlStructureFix74:
         info["Scan"]["Filename"] = xss_payload()
         app_data = {"Information": info, "Analysis": {}}
         html = generate_table_from_json(app_data)
+        assert "<script>" not in html
+
+
+# ---------------------------------------------------------------------------
+# Enhancement #76 — Threat Summary section
+# ---------------------------------------------------------------------------
+
+def make_clean_analysis():
+    return {
+        "Headers": {
+            "Data": {"from": "sender@example.com", "to": "recipient@example.com",
+                     "subject": "Hello", "date": "Wed, 02 Apr 2026 10:00:00 +0000"},
+            "Investigation": {}
+        }
+    }
+
+
+class TestSummarySectionStructure:
+    def test_summary_section_present_in_full_report(self):
+        app_data = {"Information": make_info(), "Analysis": make_clean_analysis()}
+        html = generate_table_from_json(app_data)
+        assert "summary-section" in html
+
+    def test_summary_nav_link_present(self):
+        app_data = {"Information": make_info(), "Analysis": make_clean_analysis()}
+        html = generate_table_from_json(app_data)
+        assert "#summary-section" in html
+
+    def test_threat_level_shown(self):
+        data = make_clean_analysis()
+        html = generate_summary_section(data)
+        assert "Threat Level" in html
+
+    def test_email_overview_shows_from(self):
+        data = make_clean_analysis()
+        html = generate_summary_section(data)
+        assert "sender@example.com" in html
+
+    def test_email_overview_shows_subject(self):
+        data = make_clean_analysis()
+        html = generate_summary_section(data)
+        assert "Hello" in html
+
+    def test_links_count_shown(self):
+        data = make_clean_analysis()
+        data["Links"] = {"Data": {"1": "https://a.com", "2": "https://b.com"}, "Investigation": {}}
+        html = generate_summary_section(data)
+        assert "2" in html
+
+    def test_attachments_count_shown(self):
+        data = make_clean_analysis()
+        data["Attachments"] = {"Data": {"1": {"filename": "f.pdf", "mime_type": "application/pdf"}}, "Investigation": {}}
+        html = generate_summary_section(data)
+        assert "1" in html
+
+
+class TestSummaryThreatLevel:
+    def test_low_threat_when_clean(self):
+        data = make_clean_analysis()
+        html = generate_summary_section(data)
+        assert "LOW" in html
+
+    def test_high_threat_on_spoof(self):
+        data = make_clean_analysis()
+        data["Headers"]["Investigation"]["Spoof Check"] = {
+            "Reply-To": "x@evil.com", "From": "y@bank.com",
+            "Conclusion": "Reply Address and From Address is NOT Same. This mail may be SPOOFED."
+        }
+        html = generate_summary_section(data)
+        assert "HIGH" in html
+
+    def test_medium_threat_on_display_name_mismatch(self):
+        data = make_clean_analysis()
+        data["Headers"]["Investigation"]["Display Name Check"] = {
+            "Display Name": "paypal.com", "Address": "attacker@gmail.com",
+            "Sending Domain": "gmail.com",
+            "Conclusion": "Display name contains 'paypal.com' which does not match sending domain 'gmail.com'. Possible impersonation."
+        }
+        html = generate_summary_section(data)
+        assert "MEDIUM" in html
+
+    def test_medium_threat_on_replyto_mismatch(self):
+        data = make_clean_analysis()
+        data["Headers"]["Investigation"]["Reply-To Domain Check"] = {
+            "Reply-To Address": "a@evil.com", "Reply-To Domain": "evil.com",
+            "From Address": "b@bank.com", "From Domain": "bank.com",
+            "Conclusion": "Reply-To domain 'evil.com' differs from From domain 'bank.com'."
+        }
+        html = generate_summary_section(data)
+        assert "MEDIUM" in html
+
+    def test_high_threat_on_auth_failure(self):
+        data = make_clean_analysis()
+        data["Authentication"] = {"Data": {"spf": "fail"}}
+        html = generate_summary_section(data)
+        assert "HIGH" in html
+
+    def test_suspicious_header_flag_shown(self):
+        data = make_clean_analysis()
+        data["Headers"]["Investigation"]["Suspicious Headers"] = {
+            "Missing Message-ID": "Legitimate MTAs always generate a Message-ID."
+        }
+        html = generate_summary_section(data)
+        assert "Missing Message-ID" in html
+
+    def test_no_threat_indicators_message_when_clean(self):
+        data = make_clean_analysis()
+        html = generate_summary_section(data)
+        assert "No threat indicators detected" in html
+
+    def test_xss_in_threat_flag_detail_escaped(self):
+        data = make_clean_analysis()
+        data["Headers"]["Investigation"]["Suspicious Headers"] = {
+            "Test": xss_payload()
+        }
+        html = generate_summary_section(data)
         assert "<script>" not in html
