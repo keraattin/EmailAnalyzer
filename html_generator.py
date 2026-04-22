@@ -70,8 +70,10 @@ def generate_links_section(links):
     """
     for key,value in links["Data"].items():
         # Populate table rows
+        js_val = escape(json.dumps(str(value)))
+        copy_btn = f'<button class="btn btn-sm btn-outline-secondary ml-2" onclick="copyToClipboard({js_val})" title="Copy"><i class="fa-regular fa-copy"></i></button>'
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
+        html += "<td>{}</td><td>{}{}</td>".format(escape(str(key)), escape(str(value)), copy_btn)
         html += "</tr>"
         
     html += """
@@ -218,8 +220,10 @@ def generate_digest_section(digests):
     """
     for key,value in digests["Data"].items():
         # Populate table rows
+        js_val = escape(json.dumps(str(value)))
+        copy_btn = f'<button class="btn btn-sm btn-outline-secondary ml-2" onclick="copyToClipboard({js_val})" title="Copy"><i class="fa-regular fa-copy"></i></button>'
         html += "<tr>"
-        html += "<td>{}</td><td>{}</td>".format(escape(str(key)), escape(str(value)))
+        html += "<td>{}</td><td>{}{}</td>".format(escape(str(key)), escape(str(value)), copy_btn)
         html += "</tr>"
         
     html += """
@@ -389,10 +393,24 @@ def generate_table_from_json(json_obj):
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script>
+    function copyToClipboard(text) {{
+        if (navigator.clipboard) {{
+            navigator.clipboard.writeText(text);
+        }} else {{
+            var el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        }}
+    }}
+    </script>
 </head>
 <body>
 
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
             <a class="navbar-brand" href="#"><i class="fa fa-envelope"></i> Email Analyzer</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
