@@ -278,14 +278,14 @@ class TestInformationSectionEscaping:
         info["Scan"]["Filename"] = xss_payload()
         app_data = {"Information": info, "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert "<script>" not in html
+        assert xss_payload() not in html
 
     def test_scan_generated_escaped(self):
         info = make_info()
         info["Scan"]["Generated"] = xss_payload()
         app_data = {"Information": info, "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert "<script>" not in html
+        assert xss_payload() not in html
 
     def test_safe_scan_filename_rendered_correctly(self):
         info = make_info()
@@ -469,7 +469,7 @@ class TestHtmlStructureFix74:
         info["Scan"]["Filename"] = xss_payload()
         app_data = {"Information": info, "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert "<script>" not in html
+        assert xss_payload() not in html
 
 
 # ---------------------------------------------------------------------------
@@ -586,3 +586,59 @@ class TestSummaryThreatLevel:
         }
         html = generate_summary_section(data)
         assert "<script>" not in html
+
+
+# ---------------------------------------------------------------------------
+# Enhancement #77 — sticky navbar + copy-to-clipboard buttons
+# ---------------------------------------------------------------------------
+
+class TestStickyNavbar:
+    def test_navbar_has_sticky_top_class(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert "sticky-top" in html
+
+    def test_navbar_class_contains_navbar(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'class="navbar' in html
+
+
+class TestCopyToClipboard:
+    def test_js_function_defined_in_report(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert "copyToClipboard" in html
+
+    def test_copy_button_present_in_digest_data(self):
+        data = {
+            "Data": {"File MD5": "d41d8cd98f00b204e9800998ecf8427e"},
+            "Investigation": {}
+        }
+        html = generate_digest_section(data)
+        assert "copyToClipboard" in html
+        assert "d41d8cd98f00b204e9800998ecf8427e" in html
+
+    def test_copy_button_present_in_links_data(self):
+        data = {"Data": {"1": "https://example.com"}, "Investigation": {}}
+        html = generate_links_section(data)
+        assert "copyToClipboard" in html
+        assert "https://example.com" in html
+
+    def test_copy_button_value_xss_escaped(self):
+        data = {
+            "Data": {"File MD5": xss_payload()},
+            "Investigation": {}
+        }
+        html = generate_digest_section(data)
+        assert "<script>" not in html
+
+    def test_copy_button_url_xss_escaped(self):
+        data = {"Data": {"1": xss_payload()}, "Investigation": {}}
+        html = generate_links_section(data)
+        assert "<script>" not in html
+
+    def test_clipboard_api_used_in_js(self):
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert "navigator.clipboard" in html
