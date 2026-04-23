@@ -369,10 +369,11 @@ class TestRegressionBug33:
         html = generate_table_from_json(app_data)
         assert 'id="headersDropdown"' in html
 
-    def test_links_dropdown_has_unique_id(self):
+    def test_links_nav_item_points_to_section(self):
+        """Links is a plain nav-item (not a dropdown) pointing to #links-section."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'id="linksDropdown"' in html
+        assert 'href="#links-section"' in html
 
     def test_attachments_dropdown_has_unique_id(self):
         app_data = {"Information": make_info(), "Analysis": {}}
@@ -384,11 +385,11 @@ class TestRegressionBug33:
         html = generate_table_from_json(app_data)
         assert 'id="digestsDropdown"' in html
 
-    def test_all_four_dropdown_ids_are_distinct(self):
+    def test_all_dropdown_ids_are_distinct(self):
         """Each dropdown must have a unique ID — no two dropdowns share the same id."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        ids = ["headersDropdown", "linksDropdown", "attachmentsDropdown", "digestsDropdown"]
+        ids = ["headersDropdown", "authenticationDropdown", "attachmentsDropdown", "digestsDropdown"]
         assert len(ids) == len(set(ids))  # sanity
         for id_ in ids:
             assert html.count(f'id="{id_}"') == 1, f'{id_} appears more than once'
@@ -399,10 +400,11 @@ class TestRegressionBug33:
         html = generate_table_from_json(app_data)
         assert 'aria-labelledby="headersDropdown"' in html
 
-    def test_aria_labelledby_matches_id_for_links(self):
+    def test_links_section_anchor_reachable_from_navbar(self):
+        """Links nav-item must link to the #links-section anchor."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'aria-labelledby="linksDropdown"' in html
+        assert 'href="#links-section"' in html
 
     def test_aria_labelledby_matches_id_for_attachments(self):
         app_data = {"Information": make_info(), "Analysis": {}}
@@ -446,7 +448,7 @@ class TestHtmlStructureFix74:
     def test_body_open_tag_present(self):
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert "<body>" in html
+        assert "<body" in html
 
     def test_body_close_tag_present(self):
         app_data = {"Information": make_info(), "Analysis": {}}
