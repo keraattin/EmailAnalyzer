@@ -25,7 +25,7 @@ from html_generator import generate_table_from_json
 # Global Values
 ##############################################################################
 # Version
-VERSION = "2.0"
+VERSION = "3.0"
 
 # Supported File Types
 SUPPORTED_FILE_TYPES = ["eml"]

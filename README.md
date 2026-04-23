@@ -101,11 +101,11 @@ _________________________________________________________
 
 ## To Investigate Headers
 ```
-python3 mail-analyzer.py -f <eml file> --headers --investigate
+python3 email-analyzer.py -f <eml file> --headers --investigate
 ```
 or
 ```
-python3 mail-analyzer.py -f <eml file> -Hi
+python3 email-analyzer.py -f <eml file> -Hi
 ```
 
 ```
@@ -139,6 +139,20 @@ _________________________________________________________
 ```
 
 > Investigation also extracts public IP addresses from `Received` headers and generates VirusTotal and AbuseIPDB lookup links for each one.
+
+### Investigation Checks
+
+The `-i` / `--investigate` flag enables all of the following checks when used with `-H`:
+
+| Check | What it detects |
+|---|---|
+| **X-Sender-IP** | Generates VirusTotal and AbuseIPDB lookup links for the sending IP |
+| **X-Originating-IP** | Same lookup links for the `X-Originating-IP` header when present |
+| **Received IPs** | Extracts all public IPs from `Received` headers and generates lookup links |
+| **Spoof Check** | Flags when `Reply-To` and `From` addresses differ |
+| **Display Name Check** | Flags when the `From` display name contains a domain that doesn't match the sending domain (e.g. display name `"paypal.com"` sent from `attacker@gmail.com`) |
+| **Reply-To Domain Check** | Flags when the `Reply-To` domain differs from the `From` domain — replies would be redirected to a different domain |
+| **Suspicious Headers** | Flags missing `Message-ID`, missing `MIME-Version`, dates far in the future or past (>2 days / >30 days), and known bulk-sender `X-Mailer` values (PHPMailer, The Bat, libwww-perl) |
 
 ## To get Authentication Results
 ```
@@ -294,6 +308,8 @@ python3 email-analyzer.py -f <eml file> -l
 [2]->https://testlinks.com/campaing/123124
 ```
 
+> Links are extracted from both HTML (`href` attributes) and plain-text parts of the email. Bare URLs in plain-text bodies (e.g. `https://example.com`) are also captured and deduplicated.
+
 ## To get Defanged Links
 Add `-D` / `--defang` to convert URLs to defanged format (`hxxps://`, `[.]` for domain dots). Safe to share in reports without creating clickable links.
 ```
@@ -416,6 +432,19 @@ _________________________________________________________
 
 > When two or more attachments share the same SHA256 hash, a **Duplicate Warning** is added to the investigation output listing the shared hash and the filenames involved.
 
+## HTML Report
+Generate a self-contained HTML report with Bootstrap 5 styling:
+```
+python3 email-analyzer.py -f <eml file> -o report.html
+```
+
+The HTML report includes:
+- **Threat Summary** — email overview (From, To, Subject, Date, link/attachment counts), threat level badge (LOW / MEDIUM / HIGH), and Bootstrap alert cards for each triggered investigation check
+- **Sticky navbar** — always visible while scrolling, with jump links to each section
+- **Copy-to-clipboard buttons** — next to every hash value and URL for quick threat-intel lookups
+- **Clickable investigation links** — all VirusTotal, AbuseIPDB, and URLscan entries are rendered as anchor tags
+- **Merged tables** — Links, Attachments, and Digests each show data and scan links in a single unified table
+
 ## To Check Version
 ```
 python3 email-analyzer.py --version
@@ -442,6 +471,7 @@ python3 -m pytest tests/test_attachments.py -v
 python3 -m pytest tests/test_auth_results.py -v
 python3 -m pytest tests/test_defang.py -v
 python3 -m pytest tests/test_duplicate_attachments.py -v
+python3 -m pytest tests/test_cli.py -v
 ```
 
 ### Test Structure
@@ -470,7 +500,17 @@ tests/
 │   ├── auth_fail_spf_dkim.eml
 │   ├── auth_softfail_spf.eml
 │   ├── auth_received_spf_only.eml
-│   └── auth_no_headers.eml
+│   ├── auth_no_headers.eml
+│   ├── phishing_displayname.eml
+│   ├── legitimate_displayname.eml
+│   ├── suspicious_no_message_id.eml
+│   ├── suspicious_future_date.eml
+│   ├── suspicious_old_date.eml
+│   ├── suspicious_xmailer.eml
+│   ├── clean_headers.eml
+│   ├── originating_ip.eml
+│   ├── replyto_diff_domain.eml
+│   └── replyto_same_domain.eml
 ├── conftest.py                      # Shared fixtures and module loader
 ├── test_headers.py                  # Tests for get_headers()
 ├── test_links.py                    # Tests for get_links()
@@ -482,6 +522,12 @@ tests/
 ├── test_received_ips.py             # Tests for Received header IP extraction
 ├── test_auth_results.py             # Tests for SPF/DKIM/DMARC parsing
 ├── test_defang.py                   # Tests for defanged URL output
+├── test_plaintext_links.py          # Tests for plain-text URL extraction
+├── test_display_name.py             # Tests for display name spoofing detection
+├── test_suspicious_headers.py       # Tests for suspicious header pattern detection
+├── test_originating_ip.py           # Tests for X-Originating-IP investigation
+├── test_replyto_domain.py           # Tests for Reply-To domain check
 ├── test_html_generator.py           # Tests for HTML report generation and XSS escaping
+├── test_cli.py                      # Tests for CLI argument validation
 └── test_encoding.py                 # Tests for non-UTF-8 email encoding handling
 ```
