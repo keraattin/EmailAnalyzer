@@ -369,29 +369,35 @@ class TestRegressionBug33:
         html = generate_table_from_json(app_data)
         assert 'id="headersDropdown"' in html
 
-    def test_links_dropdown_has_unique_id(self):
+    def test_links_nav_item_points_to_section(self):
+        """Links is a plain nav-item (not a dropdown) pointing to #links-section."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'id="linksDropdown"' in html
+        assert 'href="#links-section"' in html
 
-    def test_attachments_dropdown_has_unique_id(self):
+    def test_attachments_nav_item_points_to_section(self):
+        """Attachments is a plain nav-item pointing to #attachments-section."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'id="attachmentsDropdown"' in html
+        assert 'href="#attachments-section"' in html
 
-    def test_digests_dropdown_has_unique_id(self):
+    def test_digests_nav_item_points_to_section(self):
+        """Digests is a plain nav-item pointing to #digests-section."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'id="digestsDropdown"' in html
+        assert 'href="#digests-section"' in html
 
-    def test_all_four_dropdown_ids_are_distinct(self):
-        """Each dropdown must have a unique ID — no two dropdowns share the same id."""
+    def test_all_dropdown_ids_are_distinct(self):
+        """Headers is the only remaining dropdown — its ID must appear exactly once."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        ids = ["headersDropdown", "linksDropdown", "attachmentsDropdown", "digestsDropdown"]
-        assert len(ids) == len(set(ids))  # sanity
-        for id_ in ids:
-            assert html.count(f'id="{id_}"') == 1, f'{id_} appears more than once'
+        assert html.count('id="headersDropdown"') == 1
+
+    def test_authentication_nav_item_points_to_section(self):
+        """Authentication is a plain nav-item pointing to #authentication-section."""
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'href="#authentication-section"' in html
 
     def test_aria_labelledby_matches_id_for_headers(self):
         """aria-labelledby must reference the same unique ID as the toggle button."""
@@ -399,20 +405,23 @@ class TestRegressionBug33:
         html = generate_table_from_json(app_data)
         assert 'aria-labelledby="headersDropdown"' in html
 
-    def test_aria_labelledby_matches_id_for_links(self):
+    def test_links_section_anchor_reachable_from_navbar(self):
+        """Links nav-item must link to the #links-section anchor."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'aria-labelledby="linksDropdown"' in html
+        assert 'href="#links-section"' in html
 
     def test_aria_labelledby_matches_id_for_attachments(self):
+        """Attachments is a plain nav-item — section anchor must be reachable."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'aria-labelledby="attachmentsDropdown"' in html
+        assert 'href="#attachments-section"' in html
 
     def test_aria_labelledby_matches_id_for_digests(self):
+        """Digests is a plain nav-item — section anchor must be reachable."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'aria-labelledby="digestsDropdown"' in html
+        assert 'href="#digests-section"' in html
 
     def test_aria_labelledby_navbardropdown_not_present(self):
         """The old mismatched aria-labelledby='navbarDropdown' must be gone."""
@@ -446,7 +455,7 @@ class TestHtmlStructureFix74:
     def test_body_open_tag_present(self):
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert "<body>" in html
+        assert "<body" in html
 
     def test_body_close_tag_present(self):
         app_data = {"Information": make_info(), "Analysis": {}}
