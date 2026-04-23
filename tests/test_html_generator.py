@@ -388,13 +388,16 @@ class TestRegressionBug33:
         assert 'href="#digests-section"' in html
 
     def test_all_dropdown_ids_are_distinct(self):
-        """Each dropdown must have a unique ID — no two dropdowns share the same id."""
+        """Headers is the only remaining dropdown — its ID must appear exactly once."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        ids = ["headersDropdown", "authenticationDropdown"]
-        assert len(ids) == len(set(ids))  # sanity
-        for id_ in ids:
-            assert html.count(f'id="{id_}"') == 1, f'{id_} appears more than once'
+        assert html.count('id="headersDropdown"') == 1
+
+    def test_authentication_nav_item_points_to_section(self):
+        """Authentication is a plain nav-item pointing to #authentication-section."""
+        app_data = {"Information": make_info(), "Analysis": {}}
+        html = generate_table_from_json(app_data)
+        assert 'href="#authentication-section"' in html
 
     def test_aria_labelledby_matches_id_for_headers(self):
         """aria-labelledby must reference the same unique ID as the toggle button."""

@@ -305,11 +305,8 @@ def generate_table_from_json(json_obj):
                             <li><a class="dropdown-item" href="#headers-investigation-section">Investigation <span class="badge bg-secondary rounded-pill">{ headers_inv_cnt }</span></a></li>
                         </ul>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="authenticationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Authentication</a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="authenticationDropdown">
-                            <li><a class="dropdown-item" href="#authentication-section">Data <span class="badge bg-secondary rounded-pill">{ auth_cnt }</span></a></li>
-                        </ul>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#authentication-section"><i class="fa-solid fa-shield-halved me-1"></i>Authentication <span class="badge bg-secondary rounded-pill">{ auth_cnt }</span></a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#links-section"><i class="fa-solid fa-link me-1"></i>Links <span class="badge bg-secondary rounded-pill">{ links_cnt }</span></a>
