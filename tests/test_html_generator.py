@@ -375,21 +375,23 @@ class TestRegressionBug33:
         html = generate_table_from_json(app_data)
         assert 'href="#links-section"' in html
 
-    def test_attachments_dropdown_has_unique_id(self):
+    def test_attachments_nav_item_points_to_section(self):
+        """Attachments is a plain nav-item pointing to #attachments-section."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'id="attachmentsDropdown"' in html
+        assert 'href="#attachments-section"' in html
 
-    def test_digests_dropdown_has_unique_id(self):
+    def test_digests_nav_item_points_to_section(self):
+        """Digests is a plain nav-item pointing to #digests-section."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'id="digestsDropdown"' in html
+        assert 'href="#digests-section"' in html
 
     def test_all_dropdown_ids_are_distinct(self):
         """Each dropdown must have a unique ID — no two dropdowns share the same id."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        ids = ["headersDropdown", "authenticationDropdown", "attachmentsDropdown", "digestsDropdown"]
+        ids = ["headersDropdown", "authenticationDropdown"]
         assert len(ids) == len(set(ids))  # sanity
         for id_ in ids:
             assert html.count(f'id="{id_}"') == 1, f'{id_} appears more than once'
@@ -407,14 +409,16 @@ class TestRegressionBug33:
         assert 'href="#links-section"' in html
 
     def test_aria_labelledby_matches_id_for_attachments(self):
+        """Attachments is a plain nav-item — section anchor must be reachable."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'aria-labelledby="attachmentsDropdown"' in html
+        assert 'href="#attachments-section"' in html
 
     def test_aria_labelledby_matches_id_for_digests(self):
+        """Digests is a plain nav-item — section anchor must be reachable."""
         app_data = {"Information": make_info(), "Analysis": {}}
         html = generate_table_from_json(app_data)
-        assert 'aria-labelledby="digestsDropdown"' in html
+        assert 'href="#digests-section"' in html
 
     def test_aria_labelledby_navbardropdown_not_present(self):
         """The old mismatched aria-labelledby='navbarDropdown' must be gone."""

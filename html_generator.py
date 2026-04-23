@@ -83,43 +83,37 @@ def generate_links_section(links):
 
 
 def generate_attachment_section(attachments):
+    """Merged table: filename + MIME type + scan links in one row."""
     html = """
         <h2 id="attachments-section" class="text-center mt-4"><i class="fa-solid fa-paperclip"></i> Attachments</h2>
         <hr>
-        <h5 id="attachments-data-section" class="text-muted"><i class="fa-solid fa-chart-column"></i> Data</h5>
         <table class="table table-bordered table-striped table-sm">
             <thead class="table-dark">
-                <tr><th>#</th><th>Filename</th><th>MIME Type</th></tr>
+                <tr><th style="width:3%">#</th><th>Filename</th><th style="width:20%">MIME Type</th><th style="width:20%">Scan</th></tr>
             </thead>
             <tbody>
     """
     for key, value in attachments["Data"].items():
-        html += "<tr><td>{}</td><td>{}</td><td>{}</td></tr>".format(
-            escape(str(key)),
-            escape(str(value["filename"])),
-            escape(str(value["mime_type"]))
+        filename  = str(value["filename"])
+        mime_type = str(value["mime_type"])
+        inv_entry = attachments["Investigation"].get(filename, {})
+        scan_links = "".join(
+            f'<a href="{escape(y)}" class="badge bg-secondary text-decoration-none me-1 mb-1" target="_blank">{escape(x)} ({escape(k)})</a>'
+            for k, v in inv_entry.items()
+            for x, y in v.items()
         )
-    html += "</tbody></table>"
+        html += "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+            escape(str(key)), escape(filename), escape(mime_type), scan_links
+        )
 
-    html += """
-        <h5 id="attachments-investigation-section" class="text-muted mt-3"><i class="fa-solid fa-magnifying-glass"></i> Investigation</h5>
-        <table class="table table-bordered table-striped table-sm">
-            <thead class="table-dark">
-                <tr><th>File</th><th>Scan Links</th></tr>
-            </thead>
-            <tbody>
-    """
-    for index, values in attachments["Investigation"].items():
-        html += f'<tr><td class="fw-bold">{escape(str(index))}</td><td>'
-        if index == "Duplicate Warning":
-            for sha, names in values.items():
-                joined = ", ".join(escape(n) for n in names)
-                html += f'<div><code>{escape(sha)}</code>: {joined}</div>'
-        else:
-            for k, v in values.items():
-                for x, y in v.items():
-                    html += f'<a href="{escape(y)}" class="badge bg-secondary text-decoration-none me-1 mb-1" target="_blank">{escape(x)} ({escape(k)})</a>'
-        html += "</td></tr>"
+    dup = attachments["Investigation"].get("Duplicate Warning")
+    if dup:
+        dup_rows = "".join(
+            f'<div><code>{escape(sha)}</code>: {", ".join(escape(n) for n in names)}</div>'
+            for sha, names in dup.items()
+        )
+        html += f'<tr><td colspan="4"><div class="alert alert-warning mb-0 py-2"><b>Duplicate Warning</b><br>{dup_rows}</div></td></tr>'
+
     html += "</tbody></table><hr>"
     return html
 
@@ -147,36 +141,25 @@ def generate_auth_section(authentication):
 
 
 def generate_digest_section(digests):
+    """Merged table: hash value + scan link in one row."""
     html = """
         <h2 id="digests-section" class="text-center mt-4"><i class="fa-solid fa-hashtag"></i> Digests</h2>
         <hr>
-        <h5 id="digests-data-section" class="text-muted"><i class="fa-solid fa-chart-column"></i> Data</h5>
         <table class="table table-bordered table-striped table-sm">
             <thead class="table-dark">
-                <tr><th>Key</th><th>Hash</th></tr>
+                <tr><th style="width:18%">Key</th><th>Hash</th><th style="width:12%">Scan</th></tr>
             </thead>
             <tbody>
     """
     for key, value in digests["Data"].items():
         js_val = escape(json.dumps(str(value)))
         copy_btn = f'<button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard({js_val})" title="Copy hash"><i class="fa-regular fa-copy"></i></button>'
-        html += f'<tr><td class="fw-bold text-nowrap">{escape(str(key))}</td><td><code class="text-break">{escape(str(value))}</code>{copy_btn}</td></tr>'
-    html += "</tbody></table>"
-
-    html += """
-        <h5 id="digests-investigation-section" class="text-muted mt-3"><i class="fa-solid fa-magnifying-glass"></i> Investigation</h5>
-        <table class="table table-bordered table-striped table-sm">
-            <thead class="table-dark">
-                <tr><th>Hash</th><th>Scan</th></tr>
-            </thead>
-            <tbody>
-    """
-    for index, values in digests["Investigation"].items():
+        inv_entry = digests["Investigation"].get(str(key), {})
         scan_links = "".join(
-            f'<a href="{escape(v)}" class="badge bg-secondary text-decoration-none me-1" target="_blank">{escape(k)}</a>'
-            for k, v in values.items()
+            f'<a href="{escape(url)}" class="badge bg-secondary text-decoration-none me-1" target="_blank">{escape(tool)}</a>'
+            for tool, url in inv_entry.items()
         )
-        html += f'<tr><td class="fw-bold text-nowrap">{escape(str(index))}</td><td>{scan_links}</td></tr>'
+        html += f'<tr><td class="fw-bold text-nowrap">{escape(str(key))}</td><td><code class="text-break">{escape(str(value))}</code>{copy_btn}</td><td>{scan_links}</td></tr>'
     html += "</tbody></table><hr>"
     return html
 
@@ -271,14 +254,12 @@ def generate_table_from_json(json_obj):
     data      = json_obj["Analysis"]
     info_data = json_obj["Information"]
 
-    headers_cnt     = len(data["Headers"]["Data"])         if data.get("Headers")     else 0
-    headers_inv_cnt = len(data["Headers"]["Investigation"]) if data.get("Headers")     else 0
-    links_cnt       = len(data["Links"]["Data"])            if data.get("Links")       else 0
-    attach_cnt      = len(data["Attachments"]["Data"])      if data.get("Attachments") else 0
-    attach_inv_cnt  = len(data["Attachments"]["Investigation"]) if data.get("Attachments") else 0
-    digest_cnt      = len(data["Digests"]["Data"])          if data.get("Digests")     else 0
-    digest_inv_cnt  = len(data["Digests"]["Investigation"]) if data.get("Digests")     else 0
-    auth_cnt        = len(data["Authentication"]["Data"])   if data.get("Authentication") else 0
+    headers_cnt     = len(data["Headers"]["Data"])          if data.get("Headers")        else 0
+    headers_inv_cnt = len(data["Headers"]["Investigation"]) if data.get("Headers")        else 0
+    links_cnt       = len(data["Links"]["Data"])             if data.get("Links")          else 0
+    attach_cnt      = len(data["Attachments"]["Data"])       if data.get("Attachments")    else 0
+    digest_cnt      = len(data["Digests"]["Data"])           if data.get("Digests")        else 0
+    auth_cnt        = len(data["Authentication"]["Data"])    if data.get("Authentication") else 0
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -333,19 +314,11 @@ def generate_table_from_json(json_obj):
                     <li class="nav-item">
                         <a class="nav-link" href="#links-section"><i class="fa-solid fa-link me-1"></i>Links <span class="badge bg-secondary rounded-pill">{ links_cnt }</span></a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="attachmentsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Attachments</a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="attachmentsDropdown">
-                            <li><a class="dropdown-item" href="#attachments-data-section">Data <span class="badge bg-secondary rounded-pill">{ attach_cnt }</span></a></li>
-                            <li><a class="dropdown-item" href="#attachments-investigation-section">Investigation <span class="badge bg-secondary rounded-pill">{ attach_inv_cnt }</span></a></li>
-                        </ul>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#attachments-section"><i class="fa-solid fa-paperclip me-1"></i>Attachments <span class="badge bg-secondary rounded-pill">{ attach_cnt }</span></a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="digestsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Digests</a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="digestsDropdown">
-                            <li><a class="dropdown-item" href="#digests-data-section">Data <span class="badge bg-secondary rounded-pill">{ digest_cnt }</span></a></li>
-                            <li><a class="dropdown-item" href="#digests-investigation-section">Investigation <span class="badge bg-secondary rounded-pill">{ digest_inv_cnt }</span></a></li>
-                        </ul>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#digests-section"><i class="fa-solid fa-hashtag me-1"></i>Digests <span class="badge bg-secondary rounded-pill">{ digest_cnt }</span></a>
                     </li>
                 </ul>
                 <div class="d-flex gap-2 align-items-center">
