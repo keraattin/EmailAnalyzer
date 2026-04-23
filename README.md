@@ -34,13 +34,13 @@ If you want to extract the outputs to a file you can use this commands:
 ```
 python3 email-analyzer.py -f <eml file> -o report.html
 ```
-Check the ![Wiki Page](https://github.com/keraattin/EmailAnalyzer/wiki/Generate-an-HTML-Report) for details
+
+<img width="1349" height="657" alt="image" src="https://github.com/user-attachments/assets/c95aa923-e7cf-423d-8041-3c69a54fe2e8" />
 
 or 
 ```
 python3 email-analyzer.py -f <eml file> -o report.json
 ```
-Check the ![Wiki Page](https://github.com/keraattin/EmailAnalyzer/wiki/Generate-a-JSON-Report) for details
 
 > Only supported **JSON** and **HTML** formats currently.
 
