@@ -25,7 +25,7 @@ from html_generator import generate_table_from_json
 # Global Values
 ##############################################################################
 # Version
-VERSION = "2.0"
+VERSION = "3.0"
 
 # Supported File Types
 SUPPORTED_FILE_TYPES = ["eml"]
@@ -427,7 +427,7 @@ def print_data(data):
         pass  # keep default when not in a terminal
 
     # Inroduction Banner
-    get_introduction_banner()
+    get_introduction_banner(VERSION)
 
     # Print Headers
     if data["Analysis"].get("Headers"):
@@ -697,7 +697,7 @@ if __name__ == '__main__':
         if args.output:
             output_filename = str(args.output) # Filename
             write_to_file(output_filename, app_data)
-            get_introduction_banner()
+            get_introduction_banner(VERSION)
             print(f"Your data has been written to the {output_filename}")
         else:
             # Print data to Terminal
@@ -730,7 +730,7 @@ if __name__ == '__main__':
         if args.output:
             output_filename = str(args.output) # Filename
             write_to_file(output_filename, app_data)
-            get_introduction_banner()
+            get_introduction_banner(VERSION)
             print(f"Your data has been written to the {output_filename}")
         else:
             # Print data to Terminal
