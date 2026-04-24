@@ -1,0 +1,21 @@
+Content-Type: multipart/mixed; boundary="===============6556874532653865132=="
+MIME-Version: 1.0
+From: sender@example.com
+To: victim@example.com
+Subject: Binary Attachment
+
+--===============6556874532653865132==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+See attached.
+--===============6556874532653865132==
+Content-Type: application/octet-stream
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="malware.pdf"
+
+JVBERi0xLjQA//7YoLDA0A==
+
+--===============6556874532653865132==--

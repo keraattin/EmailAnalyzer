@@ -1,0 +1,11 @@
+Received: from mail1.example.com (192.168.1.1) by mail2.example.com; Wed, 02 Apr 2026 09:00:00 +0000
+Received: from mail2.example.com (192.168.1.2) by mail3.example.com; Wed, 02 Apr 2026 09:30:00 +0000
+Received: from mail3.example.com (192.168.1.3) by mail4.example.com; Wed, 02 Apr 2026 09:55:00 +0000
+From: sender@example.com
+To: recipient@example.com
+Subject: Multiple Received Headers
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+Email body with multiple relay hops.

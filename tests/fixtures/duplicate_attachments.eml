@@ -1,0 +1,34 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Duplicate Attachment Test
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="boundary_dup"
+
+--boundary_dup
+Content-Type: text/plain
+
+Test email with duplicate attachments.
+
+--boundary_dup
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="invoice.pdf"
+Content-Transfer-Encoding: base64
+
+VGhpcyBpcyBkdXBsaWNhdGUgY29udGVudCBmb3IgdGVzdGluZy4=
+
+--boundary_dup
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="receipt.pdf"
+Content-Transfer-Encoding: base64
+
+VGhpcyBpcyBkdXBsaWNhdGUgY29udGVudCBmb3IgdGVzdGluZy4=
+
+--boundary_dup
+Content-Type: text/plain
+Content-Disposition: attachment; filename="readme.txt"
+Content-Transfer-Encoding: base64
+
+VGhpcyBpcyB1bmlxdWUgY29udGVudC4=
+
+--boundary_dup--
+

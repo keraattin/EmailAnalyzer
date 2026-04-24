@@ -1,0 +1,26 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Multipart QP Links Test
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="boundary_qp_test"
+
+--boundary_qp_test
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html><body>
+<p>Click: <a href="https://phishing-site.com/steal">here</a></p>
+<p>Caf=C3=A9: <a href="https://cafe-example.com/menu">Menu</a></p>
+</body></html>
+
+--boundary_qp_test
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="payload.bin"
+Content-Transfer-Encoding: base64
+
+VGhpcyBpcyBhIGJpbmFyeSBhdHRhY2htZW50IHBheWxvYWQu
+
+--boundary_qp_test--
+

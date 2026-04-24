@@ -1,0 +1,37 @@
+Content-Type: multipart/mixed; boundary="===============8816255399923363718=="
+MIME-Version: 1.0
+From: sender@example.com
+To: victim@example.com
+Subject: Multiple Attachments
+
+--===============8816255399923363718==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+See attached files.
+--===============8816255399923363718==
+Content-Type: application/octet-stream
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="document.pdf"
+
+JVBERgD//tg=
+
+--===============8816255399923363718==
+Content-Type: application/octet-stream
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="config.txt"
+
+Q29uZmlnIGZpbGUgY29udGVudCBoZXJlLg==
+
+--===============8816255399923363718==
+Content-Type: application/octet-stream
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="payload.exe"
+
+AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
+
+--===============8816255399923363718==--

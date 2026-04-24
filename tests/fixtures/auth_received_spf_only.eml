@@ -1,0 +1,9 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Auth via Received-SPF only
+Date: Wed, 08 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Received-SPF: pass (mx.example.com: domain of sender@example.com designates 8.8.8.8 as permitted sender) client-ip=8.8.8.8
+Content-Type: text/plain
+
+Email with SPF result only in Received-SPF header, no Authentication-Results.

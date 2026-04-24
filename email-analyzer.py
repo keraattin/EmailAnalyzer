@@ -3,24 +3,30 @@
 # Libraries
 ##############################################################################
 from email.parser import HeaderParser
-from email import message_from_file,policy
+from email import message_from_binary_file,message_from_string,policy
+from email.header import decode_header,make_header
+from email.utils import parseaddr, parsedate_to_datetime
 from argparse import ArgumentParser
 import sys
 import hashlib
 import re
-import quopri
 import os
 import json
-from datetime import datetime
+import ipaddress
+from datetime import datetime, timezone
 from banners import (
     get_introduction_banner,get_headers_banner,get_links_banner,
-    get_digests_banner,get_attachment_banner,get_investigation_banner
+    get_digests_banner,get_attachment_banner,get_investigation_banner,
+    get_auth_banner
 )
 from html_generator import generate_table_from_json
 ##############################################################################
 
 # Global Values
 ##############################################################################
+# Version
+VERSION = "3.0"
+
 # Supported File Types
 SUPPORTED_FILE_TYPES = ["eml"]
 
@@ -28,8 +34,12 @@ SUPPORTED_FILE_TYPES = ["eml"]
 SUPPORTED_OUTPUT_TYPES = ["json","html"]
 
 # REGEX
-LINK_REGEX = r'href=\"((?:\S)*)\"'
+LINK_REGEX           = r'href=["\']([^"\'>\s]+)["\']'
+PLAINTEXT_URL_REGEX  = r'https?://\S+'
 MAIL_REGEX = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+IP_REGEX   = r'\b(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\b'
+AUTH_REGEX = r'\b(spf|dkim|dmarc)=(pass|fail|softfail|neutral|none|temperror|permerror)\b'
+SPF_REGEX  = r'\b(pass|fail|softfail|neutral|none|temperror|permerror)\b'
 
 # Date Format
 DATE_FORMAT = "%B %d, %Y - %H:%M:%S"
@@ -40,19 +50,29 @@ TER_COL_SIZE = 60
 
 # Functions
 ##############################################################################
+def _is_public_ip(ip_str):
+    '''Return True if the IP is a valid, globally routable address'''
+    try:
+        ip = ipaddress.ip_address(ip_str)
+        return ip.is_global and not ip.is_multicast
+    except ValueError:
+        return False
+
 def get_headers(mail_data : str, investigation):
     '''Get Headers from mail data'''
     # Get Headers from mail data
     headers = HeaderParser().parsestr(mail_data, headersonly=True)
     # Create JSON data
-    data = json.loads('{"Headers":{"Data":{},"Investigation":{}}}')
+    data = {"Headers": {"Data": {}, "Investigation": {}}}
     # Put Header data to JSON
     for k,v in headers.items():
-        data["Headers"]["Data"][k.lower()] = v.replace('\t', '').replace('\n', '')
+        decoded = str(make_header(decode_header(v)))
+        data["Headers"]["Data"][k.lower()] = decoded.replace('\t', '').replace('\n', '')
     
     # To get all 'Received' headers
     if data["Headers"]["Data"].get('received'):
-        data["Headers"]["Data"]["received"] = ' '.join(headers.get_all('Received')).replace('\t', '').replace('\n', '')
+        received_all = ' '.join(headers.get_all('Received'))
+        data["Headers"]["Data"]["received"] = str(make_header(decode_header(received_all))).replace('\t', '').replace('\n', '')
 
     # If investigation requested
     if investigation:
@@ -62,48 +82,190 @@ def get_headers(mail_data : str, investigation):
                 "Virustotal":f'https://www.virustotal.com/gui/search/{data["Headers"]["Data"]["x-sender-ip"]}',
                 "Abuseipdb":f'https://www.abuseipdb.com/check/{data["Headers"]["Data"]["x-sender-ip"]}'
             }
-        
+
+        # X-Originating-IP Investigation
+        if data["Headers"]["Data"].get("x-originating-ip"):
+            data["Headers"]["Investigation"]["X-Originating-Ip"] = {
+                "Virustotal": f'https://www.virustotal.com/gui/search/{data["Headers"]["Data"]["x-originating-ip"]}',
+                "Abuseipdb": f'https://www.abuseipdb.com/check/{data["Headers"]["Data"]["x-originating-ip"]}'
+            }
+
+        # Received Header IP Investigation
+        if data["Headers"]["Data"].get("received"):
+            received_ips = dict.fromkeys(
+                ip for ip in re.findall(IP_REGEX, data["Headers"]["Data"]["received"])
+                if _is_public_ip(ip)
+            )
+            if received_ips:
+                data["Headers"]["Investigation"]["Received IPs"] = {
+                    ip: {
+                        "Virustotal": f"https://www.virustotal.com/gui/search/{ip}",
+                        "Abuseipdb":  f"https://www.abuseipdb.com/check/{ip}"
+                    }
+                    for ip in received_ips
+                }
+
         # Reply To - From Investigation (Spoof Check)
         if data["Headers"]["Data"].get("reply-to") and data["Headers"]["Data"].get("from"):
             # Get Reply-To Address
-            replyto = re.findall(
-                    MAIL_REGEX,data["Headers"]["Data"]["reply-to"]
-            )[0]
-            
-            # Get From Address
-            mailfrom = re.findall(
-                    MAIL_REGEX,data["Headers"]["Data"]["from"]
-            )[0]
-            
-            # Check if From & Reply-To is same
-            if replyto == mailfrom:
-                conclusion = "Reply Address and From Address is SAME."
+            replyto_matches = re.findall(MAIL_REGEX, data["Headers"]["Data"]["reply-to"])
+            mailfrom_matches = re.findall(MAIL_REGEX, data["Headers"]["Data"]["from"])
+
+            if not replyto_matches or not mailfrom_matches:
+                data["Headers"]["Investigation"]["Spoof Check"] = {
+                    "Reply-To": data["Headers"]["Data"]["reply-to"],
+                    "From": data["Headers"]["Data"]["from"],
+                    "Conclusion": "Could not parse email address from Reply-To or From header."
+                }
             else:
-                conclusion = "Reply Address and From Address is NOT Same. This mail may be SPOOFED."
-            
-            # Write data to JSON
-            data["Headers"]["Investigation"]["Spoof Check"] = {
-                "Reply-To" : replyto,
-                "From": mailfrom,
-                "Conclusion":conclusion
-            }
+                replyto  = replyto_matches[0]
+                mailfrom = mailfrom_matches[0]
+
+                # Check if From & Reply-To is same
+                if replyto == mailfrom:
+                    conclusion = "Reply Address and From Address is SAME."
+                else:
+                    conclusion = "Reply Address and From Address is NOT Same. This mail may be SPOOFED."
+
+                # Write data to JSON
+                data["Headers"]["Investigation"]["Spoof Check"] = {
+                    "Reply-To" : replyto,
+                    "From": mailfrom,
+                    "Conclusion": conclusion
+                }
+
+        # Display Name Check
+        if data["Headers"]["Data"].get("from"):
+            disp_name, addr = parseaddr(data["Headers"]["Data"]["from"])
+            sending_domain = addr.split("@")[-1].lower() if "@" in addr else ""
+
+            if disp_name:
+                # Find domain-like tokens (e.g. "paypal.com") inside the display name
+                display_domains = re.findall(r'\b[a-zA-Z0-9-]+\.[a-zA-Z]{2,}\b', disp_name)
+
+                if display_domains and all(d.lower() != sending_domain for d in display_domains):
+                    conclusion = (
+                        f"Display name contains '{', '.join(display_domains)}' "
+                        f"which does not match sending domain '{sending_domain}'. "
+                        f"Possible impersonation."
+                    )
+                elif display_domains:
+                    conclusion = "Display name is consistent with the sending domain."
+                else:
+                    conclusion = "No domain detected in display name."
+
+                data["Headers"]["Investigation"]["Display Name Check"] = {
+                    "Display Name": disp_name,
+                    "Address": addr,
+                    "Sending Domain": sending_domain,
+                    "Conclusion": conclusion
+                }
+
+        # Reply-To Domain Check
+        if data["Headers"]["Data"].get("reply-to") and data["Headers"]["Data"].get("from"):
+            replyto_matches = re.findall(MAIL_REGEX, data["Headers"]["Data"]["reply-to"])
+            mailfrom_matches = re.findall(MAIL_REGEX, data["Headers"]["Data"]["from"])
+            if replyto_matches and mailfrom_matches:
+                replyto_addr  = replyto_matches[0]
+                mailfrom_addr = mailfrom_matches[0]
+                replyto_domain  = replyto_addr.split("@")[-1].lower()  if "@" in replyto_addr  else ""
+                mailfrom_domain = mailfrom_addr.split("@")[-1].lower() if "@" in mailfrom_addr else ""
+                if replyto_domain and mailfrom_domain and replyto_domain != mailfrom_domain:
+                    conclusion = (
+                        f"Reply-To domain '{replyto_domain}' differs from From domain "
+                        f"'{mailfrom_domain}'. Replies will be directed to a different domain."
+                    )
+                else:
+                    conclusion = f"Reply-To domain matches From domain ('{replyto_domain}')."
+                data["Headers"]["Investigation"]["Reply-To Domain Check"] = {
+                    "Reply-To Address": replyto_addr,
+                    "Reply-To Domain": replyto_domain,
+                    "From Address": mailfrom_addr,
+                    "From Domain": mailfrom_domain,
+                    "Conclusion": conclusion
+                }
+
+        # Suspicious Headers Check
+        suspicious = {}
+
+        if not data["Headers"]["Data"].get("message-id"):
+            suspicious["Missing Message-ID"] = (
+                "Legitimate mail transfer agents always generate a Message-ID. "
+                "Its absence suggests a script-generated or spoofed email."
+            )
+
+        if not data["Headers"]["Data"].get("mime-version"):
+            suspicious["Missing MIME-Version"] = (
+                "MIME-Version header is absent. Expected in all modern emails."
+            )
+
+        if data["Headers"]["Data"].get("date"):
+            try:
+                msg_date = parsedate_to_datetime(data["Headers"]["Data"]["date"])
+                now = datetime.now(timezone.utc)
+                days_diff = (msg_date - now).total_seconds() / 86400
+                if days_diff > 2:
+                    suspicious["Future Date"] = (
+                        f"Email date is {int(days_diff)} days in the future "
+                        f"({data['Headers']['Data']['date']}). Possible timestamp manipulation."
+                    )
+                elif days_diff < -30:
+                    suspicious["Old Date"] = (
+                        f"Email date is {int(abs(days_diff))} days in the past "
+                        f"({data['Headers']['Data']['date']}). Possible replayed or manipulated message."
+                    )
+            except Exception:
+                suspicious["Unparseable Date"] = (
+                    f"Could not parse Date header: {data['Headers']['Data']['date']}"
+                )
+
+        SUSPICIOUS_MAILERS = ["phpmailer", "the bat", "libwww-perl"]
+        xmailer = data["Headers"]["Data"].get("x-mailer", "").lower()
+        if any(tool in xmailer for tool in SUSPICIOUS_MAILERS):
+            suspicious["Suspicious X-Mailer"] = (
+                f"X-Mailer value '{data['Headers']['Data']['x-mailer']}' is associated "
+                f"with bulk or script-based mail sending."
+            )
+
+        if suspicious:
+            data["Headers"]["Investigation"]["Suspicious Headers"] = suspicious
 
     return data
 
-def get_digests(mail_data : str, filename : str, investigation):
+def get_auth_results(mail_data : str):
+    '''Parse SPF, DKIM, DMARC authentication results from email headers'''
+    headers = HeaderParser().parsestr(mail_data, headersonly=True)
+
+    # Create JSON data
+    data = {"Authentication": {"Data": {}}}
+
+    # Parse Authentication-Results header(s)
+    auth_headers = headers.get_all('Authentication-Results') or []
+    combined = ' '.join(auth_headers).lower()
+    for protocol, result in re.findall(AUTH_REGEX, combined):
+        data["Authentication"]["Data"][protocol.upper()] = result
+
+    # Fall back to Received-SPF for SPF if not found in Authentication-Results
+    if "SPF" not in data["Authentication"]["Data"]:
+        received_spf = headers.get('Received-SPF') or ''
+        spf_match = re.search(SPF_REGEX, received_spf.lower())
+        if spf_match:
+            data["Authentication"]["Data"]["SPF"] = spf_match.group(1)
+
+    return data
+
+def get_digests(mail_data : str, file_bytes : bytes, investigation):
     '''Get Hash value of mail'''
-    with open(filename, 'rb') as f:
-        eml_file    = f.read()
-        file_md5    = hashlib.md5(eml_file).hexdigest()
-        file_sha1   = hashlib.sha1(eml_file).hexdigest()
-        file_sha256 = hashlib.sha256(eml_file).hexdigest()
+    file_md5    = hashlib.md5(file_bytes).hexdigest()
+    file_sha1   = hashlib.sha1(file_bytes).hexdigest()
+    file_sha256 = hashlib.sha256(file_bytes).hexdigest()
 
     content_md5     = hashlib.md5(mail_data.encode("utf-8")).hexdigest()
     content_sha1    = hashlib.sha1(mail_data.encode("utf-8")).hexdigest()
     content_sha256  = hashlib.sha256(mail_data.encode("utf-8")).hexdigest()
 
     # Create JSON data
-    data = json.loads('{"Digests":{"Data":{},"Investigation":{}}}')
+    data = {"Digests": {"Data": {}, "Investigation": {}}}
 
     # Write Data to JSON
     data["Digests"]["Data"]["File MD5"]         = file_md5
@@ -135,26 +297,59 @@ def get_digests(mail_data : str, filename : str, investigation):
         }
     return data
 
-def get_links(mail_data : str, investigation):
+def _defang_url(url):
+    '''Defang a URL for safe sharing in reports'''
+    url = url.replace("https://", "hxxps://")
+    url = url.replace("http://",  "hxxp://")
+    # Defang dots in the domain only (between :// and the next /)
+    if "://" in url:
+        scheme, rest = url.split("://", 1)
+        domain, _, path = rest.partition("/")
+        domain = domain.replace(".", "[.]")
+        url = f"{scheme}://{domain}/{path}" if path else f"{scheme}://{domain}"
+    else:
+        # No scheme — defang all dots
+        url = url.replace(".", "[.]")
+    return url
+
+def get_links(mail_data : str, investigation, defang=False):
     '''Get Links from mail data'''
 
-    # If content of eml file is Encoded -> Decode
-    if "Content-Transfer-Encoding" in mail_data:
-        mail_data = str(quopri.decodestring(mail_data)) # Decode
+    # Parse the email and extract links from each part by content type
+    msg = message_from_string(mail_data, policy=policy.compat32)
+    html_links   = []
+    plain_links  = []
+    for part in msg.walk():
+        if part.get_content_maintype() == "multipart":
+            continue
+        payload = part.get_payload(decode=True)
+        if payload is None:
+            continue
+        charset = part.get_content_charset() or "utf-8"
+        try:
+            text = payload.decode(charset, errors="replace")
+        except (LookupError, UnicodeDecodeError):
+            text = payload.decode("utf-8", errors="replace")
 
-    # Find the Links    
-    links = re.findall(LINK_REGEX, mail_data)
+        if part.get_content_type() == "text/html":
+            html_links.extend(re.findall(LINK_REGEX, text))
+        elif part.get_content_type() == "text/plain":
+            # Strip trailing punctuation that is unlikely to be part of a URL
+            plain_links.extend(
+                url.rstrip(".,;:!?)]>\"'")
+                for url in re.findall(PLAINTEXT_URL_REGEX, text)
+            )
 
-    # Remove Duplicates
-    links = list(dict.fromkeys(links))
+    # HTML href links take priority; plain-text URLs fill in anything new
+    links = list(dict.fromkeys(html_links + plain_links))
     # Remove Empty Values
     links = list(filter(None, links))
 
     # Create JSON data
-    data = json.loads('{"Links":{"Data":{},"Investigation":{}}}')
+    data = {"Links": {"Data": {}, "Investigation": {}}}
 
     for index,link in enumerate(links,start=1):
-        data["Links"]["Data"][str(index)] = link
+        data["Links"]["Data"][str(index)] = _defang_url(link) if defang else link
     
     # If investigation requested
     if investigation:
@@ -171,24 +366,33 @@ def get_links(mail_data : str, investigation):
 
 def get_attachments(filename : str, investigation):
     ''' Get Attachments from eml file'''
-    with open(filename, "r") as f:
-        msg = message_from_file(f, policy=policy.default)
+    with open(filename, "rb") as f:
+        msg = message_from_binary_file(f, policy=policy.default)
     
     # Create JSON data
-    data = json.loads('{"Attachments":{"Data":{},"Investigation":{}}}')
+    data = {"Attachments": {"Data": {}, "Investigation": {}}}
 
     # Get Attachments from Mail
     attachments = []
+    collected = 0
     for attachment in msg.iter_attachments():
+        payload = attachment.get_payload(decode=True)
+        if payload is None:
+            continue
+        collected += 1
         attached_file = {}
-        attached_file["filename"] = attachment.get_filename()
-        attached_file["MD5"] = hashlib.md5(attachment.get_payload(decode=True)).hexdigest()
-        attached_file["SHA1"] = hashlib.sha1(attachment.get_payload(decode=True)).hexdigest()
-        attached_file["SHA256"] = hashlib.sha256(attachment.get_payload(decode=True)).hexdigest()
+        attached_file["filename"]  = attachment.get_filename() or f"unnamed_attachment_{collected}"
+        attached_file["mime_type"] = attachment.get_content_type()
+        attached_file["MD5"]    = hashlib.md5(payload).hexdigest()
+        attached_file["SHA1"]   = hashlib.sha1(payload).hexdigest()
+        attached_file["SHA256"] = hashlib.sha256(payload).hexdigest()
         attachments.append(attached_file)
 
     for index,attachment in enumerate(attachments,start=1):
-        data["Attachments"]["Data"][str(index)] = attachment["filename"]
+        data["Attachments"]["Data"][str(index)] = {
+            "filename":  attachment["filename"],
+            "mime_type": attachment["mime_type"]
+        }
 
     # If investigation requested
     if investigation:
@@ -202,14 +406,28 @@ def get_attachments(filename : str, investigation):
                 }
             }
 
+        # Detect duplicate attachments by SHA256
+        sha256_map = {}
+        for attachment in attachments:
+            sha256_map.setdefault(attachment["SHA256"], []).append(attachment["filename"])
+        duplicates = {sha: names for sha, names in sha256_map.items() if len(names) > 1}
+        if duplicates:
+            data["Attachments"]["Investigation"]["Duplicate Warning"] = duplicates
+
     return data
 ##############################################################################
 
 # Pretty Print Function
 ##############################################################################
 def print_data(data):
+    global TER_COL_SIZE
+    try:
+        TER_COL_SIZE = os.get_terminal_size().columns
+    except OSError:
+        pass  # keep default when not in a terminal
+
     # Inroduction Banner
-    get_introduction_banner()
+    get_introduction_banner(VERSION)
 
     # Print Headers
     if data["Analysis"].get("Headers"):
@@ -233,6 +451,17 @@ def print_data(data):
                     print(f"{k}:\n{v}\n")
                 print("_"*TER_COL_SIZE)
     
+    # Print Authentication
+    if data["Analysis"].get("Authentication"):
+        # Print Banner
+        get_auth_banner()
+
+        for key,val in data["Analysis"]["Authentication"]["Data"].items():
+            print("_"*TER_COL_SIZE)
+            print(f"[{key}]")
+            print(val)
+            print("_"*TER_COL_SIZE)
+
     # Print Digests
     if data["Analysis"].get("Digests"):
         # Print Banner
@@ -281,7 +510,7 @@ def print_data(data):
 
         # Print Attachments
         for key,val in data["Analysis"]["Attachments"]["Data"].items():
-            print(f"[{key}]->{val}")
+            print(f"[{key}] {val['filename']} ({val['mime_type']})")
             print("_"*TER_COL_SIZE)
         
         # Print Investigation
@@ -290,10 +519,16 @@ def print_data(data):
             for key,val in data["Analysis"]["Attachments"]["Investigation"].items():
                 print("_"*TER_COL_SIZE)
                 print(f"- {key}\n")
-                for k,v in val.items():
-                    print(f"{k}:")
-                    for a,b in v.items():
-                        print(f"[{a}]->{b}")
+                if key == "Duplicate Warning":
+                    for sha,names in val.items():
+                        print(f"[{sha}]")
+                        for name in names:
+                            print(f"  {name}")
+                else:
+                    for k,v in val.items():
+                        print(f"{k}:")
+                        for a,b in v.items():
+                            print(f"[{a}]->{b}")
                 print("_"*TER_COL_SIZE)
 ##############################################################################
 
@@ -311,19 +546,16 @@ def write_to_file(filename, data):
         with open(filename, 'w', encoding="utf-8") as file:
             html_data = generate_table_from_json(data)
             file.write(html_data)
-    # if Output File Format is NOT Supported
-    # file_format is NOT in SUPPORTED_FILE_TYPES
-    else:
-        print(f"{filename} file format not supported for output")
-        sys.exit(-1) #Exit with error code
 ##############################################################################
 
 # Main
 ##############################################################################
-description = ""
 if __name__ == '__main__':
-    parser = ArgumentParser(
-        description=description
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {VERSION}"
     )
     parser.add_argument(
         "-f",
@@ -361,6 +593,20 @@ if __name__ == '__main__':
         action="store_true"
     )
     parser.add_argument(
+        "-A",
+        "--authentication",
+        help="To get the Authentication Results of the Email (SPF, DKIM, DMARC)",
+        required=False,
+        action="store_true"
+    )
+    parser.add_argument(
+        "-D",
+        "--defang",
+        help="Defang URLs in Links output (hxxps://, [.] notation)",
+        required=False,
+        action="store_true"
+    )
+    parser.add_argument(
         "-i",
         "--investigate",
         help="Activate if you want an investigation",
@@ -376,12 +622,12 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    # If we are in a terminal
-    if sys.stdout.isatty():
-        # Get Terminal Column Size
-        terminal_size = os.get_terminal_size()
-        # Set Terminal Column Size
-        TER_COL_SIZE = terminal_size.columns
+    # Validate output format before doing any work
+    if args.output:
+        output_format = args.output.split('.')[-1].lower()
+        if output_format not in SUPPORTED_OUTPUT_TYPES:
+            print(f"{output_format} file format not supported for output. Supported formats: {', '.join(SUPPORTED_OUTPUT_TYPES)}")
+            sys.exit(-1)
 
     # Filename
     if args.filename:
@@ -392,16 +638,21 @@ if __name__ == '__main__':
         if file_format not in SUPPORTED_FILE_TYPES:
             print(f"{file_format} file format not supported")
             sys.exit(-1) #Exit with error code
-    
-    with open(filename,"r",encoding="utf-8") as file:
-        data = file.read().rstrip()
+
+    if not os.path.isfile(filename):
+        print(f"File not found: {filename}")
+        sys.exit(-1)
+
+    with open(filename,"rb") as file:
+        file_bytes = file.read()
+    data = file_bytes.decode("utf-8", errors="replace").rstrip()
 
     # Create JSON data
-    app_data = json.loads('{"Information": {}, "Analysis":{}}')
+    app_data = {"Information": {}, "Analysis": {}}
     app_data["Information"]["Project"] = {
         "Name":"EmailAnalyzer",
         "Url":"https://github.com/keraattin/EmailAnalyzer",
-        "Version": "2.0",
+        "Version": VERSION,
     }
     app_data["Information"]["Scan"] = {
         "Filename": filename,
@@ -409,7 +660,7 @@ if __name__ == '__main__':
     }
     
     # List of Arguments
-    arg_list = [args.headers, args.digests, args.links, args.attachments]
+    arg_list = [args.headers, args.digests, args.links, args.attachments, args.authentication]
 
     # Check if any argument given
     if any(arg_list):
@@ -419,21 +670,26 @@ if __name__ == '__main__':
             headers = get_headers(data, args.investigate)
             app_data["Analysis"].update(headers)
 
+        # Authentication
+        if args.authentication:
+            authentication = get_auth_results(data)
+            app_data["Analysis"].update(authentication)
+
         # Digests
         if args.digests:
             # Get Digests
-            digests = get_digests(data, filename, args.investigate)
+            digests = get_digests(data, file_bytes, args.investigate)
             app_data["Analysis"].update(digests)
 
         # Links
         if args.links:
             # Get & Print Links
-            links = get_links(data, args.investigate)
+            links = get_links(data, args.investigate, defang=args.defang)
             app_data["Analysis"].update(links)
-        
+
         # Attachments
         if args.attachments:
-            # Get Attachments 
+            # Get Attachments
             attachments = get_attachments(filename, args.investigate)
             app_data["Analysis"].update(attachments)
         
@@ -441,7 +697,7 @@ if __name__ == '__main__':
         if args.output:
             output_filename = str(args.output) # Filename
             write_to_file(output_filename, app_data)
-            get_introduction_banner()
+            get_introduction_banner(VERSION)
             print(f"Your data has been written to the {output_filename}")
         else:
             # Print data to Terminal
@@ -454,15 +710,19 @@ if __name__ == '__main__':
         headers = get_headers(data, investigate)
         app_data["Analysis"].update(headers)
 
+        # Get Authentication Results
+        authentication = get_auth_results(data)
+        app_data["Analysis"].update(authentication)
+
         # Get Digests
-        digests = get_digests(data, filename, investigate)
+        digests = get_digests(data, file_bytes, investigate)
         app_data["Analysis"].update(digests)
 
         # Get & Print Links
-        links = get_links(data, investigate)
+        links = get_links(data, investigate, defang=False)
         app_data["Analysis"].update(links)
-        
-        # Get Attachments 
+
+        # Get Attachments
         attachments = get_attachments(filename, investigate)
         app_data["Analysis"].update(attachments)
 
@@ -470,7 +730,7 @@ if __name__ == '__main__':
         if args.output:
             output_filename = str(args.output) # Filename
             write_to_file(output_filename, app_data)
-            get_introduction_banner()
+            get_introduction_banner(VERSION)
             print(f"Your data has been written to the {output_filename}")
         else:
             # Print data to Terminal

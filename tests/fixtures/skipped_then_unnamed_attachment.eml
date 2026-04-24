@@ -1,0 +1,22 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Skipped Then Unnamed Attachment Test
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="outer_boundary"
+
+--outer_boundary
+Content-Type: multipart/alternative; boundary="inner_boundary"
+Content-Disposition: attachment
+
+--inner_boundary
+Content-Type: text/plain
+
+This nested multipart part has no decodable payload.
+--inner_boundary--
+
+--outer_boundary
+Content-Type: application/octet-stream
+Content-Disposition: attachment
+
+This attachment has no filename.
+--outer_boundary--

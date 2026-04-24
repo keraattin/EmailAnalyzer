@@ -1,0 +1,9 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: Old Date Test
+Message-ID: <olddate@example.com>
+Date: Mon, 01 Jan 2024 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+This email has a date more than 30 days in the past.

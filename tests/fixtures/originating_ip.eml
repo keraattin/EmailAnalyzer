@@ -1,0 +1,10 @@
+From: sender@example.com
+To: recipient@example.com
+Subject: X-Originating-IP Test
+Message-ID: <origip@example.com>
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+X-Originating-IP: 203.0.113.42
+Content-Type: text/plain
+
+This email has an X-Originating-IP header.

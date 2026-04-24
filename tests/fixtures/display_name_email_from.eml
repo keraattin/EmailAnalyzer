@@ -1,0 +1,9 @@
+From: "Bank Admin" <admin@bank.com>
+Reply-To: attacker@evil.com
+To: victim@example.com
+Subject: Spoofed with display name From
+Date: Wed, 02 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+Please verify your account immediately.

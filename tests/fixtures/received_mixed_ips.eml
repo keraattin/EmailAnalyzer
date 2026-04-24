@@ -1,0 +1,11 @@
+Received: from mail.attacker.com (8.8.4.4) by internal.corp.com with SMTP; Wed, 08 Apr 2026 09:00:00 +0000
+Received: from internal.corp.com (10.0.0.5) by mail.corp.com with SMTP; Wed, 08 Apr 2026 08:58:00 +0000
+Received: from localhost (127.0.0.1) by internal.corp.com with SMTP; Wed, 08 Apr 2026 08:56:00 +0000
+From: sender@example.com
+To: recipient@example.com
+Subject: Mixed IPs Received Test
+Date: Wed, 08 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+Email with both public and private IPs in Received headers.

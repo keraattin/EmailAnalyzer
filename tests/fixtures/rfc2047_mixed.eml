@@ -1,0 +1,9 @@
+From: =?ISO-8859-1?Q?Andr=E9?= <andre@example.com>
+To: recipient@example.com
+Subject: =?UTF-8?B?UmVzdW3DqQ==?=
+X-Custom: =?UTF-8?Q?Test_=E2=9C=93?=
+Date: Wed, 08 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+Test email with mixed charset RFC 2047 encoded headers.

@@ -1,0 +1,33 @@
+Content-Type: multipart/mixed; boundary="===============9180908962875686407=="
+MIME-Version: 1.0
+From: sender@example.com
+To: victim@example.com
+Subject: Multipart Alternative Sub-Part
+
+--===============9180908962875686407==
+Content-Type: multipart/alternative; boundary="===============7371444051602121717=="
+MIME-Version: 1.0
+
+--===============7371444051602121717==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Plain text body.
+--===============7371444051602121717==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+<p>HTML body.</p>
+--===============7371444051602121717==--
+
+--===============9180908962875686407==
+Content-Type: application/octet-stream
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="real.pdf"
+
+JVBERi0xLjQ=
+
+--===============9180908962875686407==--

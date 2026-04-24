@@ -1,0 +1,10 @@
+Received: from mail.attacker.com (8.8.8.8) by mail.victim.com with SMTP; Wed, 08 Apr 2026 09:00:00 +0000
+Received: from relay.provider.com (1.1.1.1) by mail.attacker.com with SMTP; Wed, 08 Apr 2026 08:55:00 +0000
+From: sender@example.com
+To: recipient@example.com
+Subject: Public IP Received Test
+Date: Wed, 08 Apr 2026 10:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain
+
+Email body with public IPs in Received headers.
