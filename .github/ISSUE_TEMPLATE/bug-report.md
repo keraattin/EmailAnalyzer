@@ -22,6 +22,7 @@ Steps to reproduce the behavior:
 
 **Desktop (please complete the following information):**
  - OS with Version : [e.g. iOS]
+ - Python Version : [e.g Python 3.10]
  - Browser with Version : [e.g. chrome, safari] (If Applicable)
  - EmailAnalyzer Project Version : [e.g. v2.0]
 
